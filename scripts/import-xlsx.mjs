@@ -48,9 +48,10 @@ for (const sheetName of wb.SheetNames) {
   for (let r=1; r<rows.length; r++) {
     const row = rows[r];
     if (!row) continue;
-    const name_es = normalizeStr(row[iNombre]);
-    const name_en = normalizeStr(row[iName]);
+    let name_es = normalizeStr(row[iNombre]);
+    let name_en = normalizeStr(row[iName]);
     if (!name_es && !name_en) { skipped++; continue; }
+    if (!name_es && name_en) name_es = name_en;
     totalRows++;
     const qtyRaw = row[iQ];
     let qty = parseInt(qtyRaw,10);

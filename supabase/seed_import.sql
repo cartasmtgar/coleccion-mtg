@@ -1,4 +1,4 @@
--- seed import generado desde coleccion.xlsx - 2026-09-01T23:44:28.236Z
+-- seed import generado desde coleccion.xlsx - 2026-09-01T23:56:22.895Z
 -- Total filas agrupadas: 2201 (original 2209)
 TRUNCATE public.cards RESTART IDENTITY CASCADE;
 INSERT INTO public.cards (name_es, name_en, quantity, type, edition, rarity, year, language, condition, owner, notes, goldfish_url, price_usd, scryfall_id, scryfall_uri, image_url) VALUES
@@ -656,7 +656,7 @@ INSERT INTO public.cards (name_es, name_en, quantity, type, edition, rarity, yea
 ('Tigre al Acecho', 'Stalking Tiger', 2, 'Verde', 'Mirage', 'common', '1996', 'ES', NULL, 'Pollo', NULL, 'https://www.mtggoldfish.com/price/Mirage/Stalking+Tiger#online', NULL, NULL, NULL, NULL),
 ('Caparazon', 'Carapace', 2, 'Verde', 'Homelands', 'common', '1995', 'ES', NULL, 'Pollo', 'A', 'https://www.mtggoldfish.com/price/Homelands/Carapace-A#online', NULL, NULL, NULL, NULL),
 ('Caparazon', 'Carapace', 1, 'Verde', 'Homelands', 'common', '1995', 'ES', NULL, 'Pollo', 'B', 'https://www.mtggoldfish.com/price/Homelands/Carapace-B#online', NULL, NULL, NULL, NULL),
-(NULL, 'Taste of Paradise', 1, 'Verde', 'Alliances', 'common', '1996', 'EN', NULL, 'Pollo', 'A', 'https://www.mtggoldfish.com/price/Alliances/Taste+of+Paradise-A#online', NULL, NULL, NULL, NULL),
+('Taste of Paradise', 'Taste of Paradise', 1, 'Verde', 'Alliances', 'common', '1996', 'EN', NULL, 'Pollo', 'A', 'https://www.mtggoldfish.com/price/Alliances/Taste+of+Paradise-A#online', NULL, NULL, NULL, NULL),
 ('Osos Pardos', 'Grizzly Bears', 3, 'Verde', '4ta', 'common', '1995', 'ES', NULL, 'Pollo', NULL, 'https://www.mtggoldfish.com/price/Fourth+Edition/Grizzly+Bears#online', NULL, NULL, NULL, NULL),
 ('Hurones de Yoven', 'Joven''s Ferrets', 1, 'Verde', 'Homelands', 'common', '1995', 'ES', NULL, 'Pollo', NULL, 'https://www.mtggoldfish.com/price/Homelands/Jovens+Ferrets#online', NULL, NULL, NULL, NULL),
 ('Tormenta de Arena', 'Sandstorm', 4, 'Verde', '4ta', 'common', '1995', 'ES', NULL, 'Pollo', NULL, 'https://www.mtggoldfish.com/price/Fourth+Edition/Sandstorm#online', NULL, NULL, NULL, NULL),
