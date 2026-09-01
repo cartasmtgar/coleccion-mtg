@@ -43,6 +43,16 @@ export function CardDetail({
               Ver en Scryfall <ExternalLink size={14} />
             </a>
           )}
+          {card.goldfish_url && (
+            <a
+              href={card.goldfish_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-flex items-center gap-1.5 text-sm text-zinc-400 hover:text-amber-300 hover:underline"
+            >
+              Referencia Goldfish <ExternalLink size={14} />
+            </a>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -52,13 +62,18 @@ export function CardDetail({
             {card.edition && <Badge variant="outline">{card.edition}</Badge>}
             {card.rarity && <Badge variant={card.rarity === 'mythic' ? 'mythic' : 'rare'}>{card.rarity}</Badge>}
             <Badge variant="outline">{card.language}</Badge>
-            <Badge variant="outline">{card.condition}</Badge>
+            {(card as unknown as { _langs?: Record<string, number> })._langs && Object.keys((card as unknown as { _langs: Record<string, number> })._langs).length > 0 && (
+              <Badge variant="outline" className="bg-amber-900/20 text-amber-300 border-amber-700/30">
+                {Object.entries((card as unknown as { _langs: Record<string, number> })._langs).map(([l,q])=>`${l} x${q}`).join(' · ')}
+              </Badge>
+            )}
+            {card.condition && <Badge variant="outline">{card.condition}</Badge>}
             {card.year && <Badge variant="outline">{card.year}</Badge>}
           </div>
 
           <dl className="grid grid-cols-2 gap-3 text-sm">
             <div><dt className="text-zinc-500">Tipo</dt><dd className="text-zinc-200">{card.type ?? scryfall?.type_line ?? '—'}</dd></div>
-            <div><dt className="text-zinc-500">Cantidad</dt><dd className="text-zinc-200">x{card.quantity}</dd></div>
+            <div><dt className="text-zinc-500">Cantidad total</dt><dd className="text-zinc-200">x{(card as unknown as { _total?: number })._total ?? card.quantity}</dd></div>
             <div><dt className="text-zinc-500">Dueño</dt><dd className="text-zinc-200">{card.owner ?? '—'}</dd></div>
             <div><dt className="text-zinc-500">Precio sugerido</dt><dd className="font-semibold text-amber-400">{formatPrice(price)}</dd></div>
           </dl>

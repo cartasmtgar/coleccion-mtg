@@ -18,11 +18,16 @@
 - [x] RLS endurecido: `supabase/schema.sql:68` insert/update/delete ahora con `auth.role()='authenticated'` (antes `true`).
 - [x] Admin desacoplado del catálogo: `src/pages/CatalogPage.tsx:1` y `src/pages/AdminPage.tsx:1`, `src/App.tsx:1` solo ruteo.
 
+## Estado actual — v0.3.0 (2026-09-01) — Import XLSX y DB extendida
+- [x] **DB extendida:** `rarity` acepta `basic` (Basic Land), `condition` nullable (vacío), nuevo campo `goldfish_url text` (referencia permanente, no se reemplaza con Scryfall). Migración idempotente en `supabase/schema.sql:11`.
+- [x] **Tipos:** `src/types/card.ts:1` añade `basic` + `goldfish_url`, `condition` nullable.
+- [x] **Import XLSX:** `scripts/import-xlsx.mjs:1` lee 3 pestañas (Pollo/Phil/Yupi -> `owner`), 2209 filas con nombre, agrupa duplicados exactos por clave completa `owner+goldfish_url+idioma+notas+...` (8 duplicados sumados), genera `supabase/seed_import.sql` (2201 filas únicas, 3499 unidades) + `seed_import.json`. Precio ignorado (`price_usd=null`), `goldfish_url` preservado.
+- [x] **Catálogo agrupado:** `src/pages/CatalogPage.tsx:1` agrupa por `goldfish_url` (canónico) mostrando **total global + desglose por idioma** (ES x, EN x, PT x) en `CardGrid.tsx:1` / `CardTable.tsx:1` y detalle. Base mantiene filas por owner separadas, frontend suma automáticamente. `SearchFilters` oculta `owner` en catálogo.
+- [x] **Admin:** `src/components/admin/CardForm.tsx:1` añade campo Goldfish y `basic`, `condition` opcional.
+
 ## Próximas tareas — Prioridad Alta
-- [ ] **Re-ejecutar RLS en Supabase** — Ejecutar nuevo `supabase/schema.sql` en SQL Editor para aplicar políticas `authenticated` (si ya se ejecutó la versión anterior, hacer `drop policy` + `create policy`).
-- [ ] **Crear usuario admin en Supabase** — Dashboard > Authentication > Users > Add user (email+password). Usar ese login en `/admin/login`.
-- [ ] **Import masivo desde Excel/CSV** — Parser para migrar la hoja original (mapeo columnas -> `Card`). UI en Admin para upload + preview + validación.
-- [ ] **Paginación + búsqueda server-side** — Pasar filtros a Supabase (`ilike`/`eq`) en lugar de filtrado cliente. Necesario con >500 cartas.
+- [ ] **Ejecutar migración + seed en Supabase** — SQL Editor: 1) correr `supabase/schema.sql` actualizado, 2) correr `supabase/seed_import.sql` (TRUNCATE + 2201 inserts). Verificar `Table Editor` 2201 filas.
+- [ ] **Paginación + búsqueda server-side** — Pasar filtros a Supabase (`ilike`/`eq`) en lugar de filtrado cliente. Necesario con 2201 filas.
 - [ ] **Deploy Netlify pendiente** — Conectar repo, setear `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`, verificar build prod. Ver `netlify.toml:1`.
 
 ## Prioridad Media

@@ -41,6 +41,23 @@ export function CatalogPage() {
     })
   }, [cards, filters])
 
+  // Agrupar por goldfish_url para mostrar total + desglose por idioma (B)
+  const grouped = useMemo(() => {
+    const map = new Map<string, { rep: Card; total: number; langs: Record<string, number> }>()
+    for (const c of filtered) {
+      const key = c.goldfish_url ? c.goldfish_url : `${c.name_es}||${c.name_en}||${c.edition}||${c.type}`
+      const entry = map.get(key)
+      if (entry) {
+        entry.total += c.quantity
+        entry.langs[c.language] = (entry.langs[c.language] ?? 0) + c.quantity
+        // mantener representativa con cantidad total para orden? no necesario
+      } else {
+        map.set(key, { rep: c, total: c.quantity, langs: { [c.language]: c.quantity } })
+      }
+    }
+    return [...map.values()].map(v => ({ ...v.rep, quantity: v.total, _total: v.total, _langs: v.langs } as Card & { _total: number; _langs: Record<string, number> }))
+  }, [filtered])
+
   const handleSelect = async (card: Card) => {
     setDetailCard(card)
     setDetailScryfall(null)
@@ -91,7 +108,7 @@ export function CatalogPage() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-2xl font-bold text-white">Catálogo Público</h2>
-                <p className="text-sm text-zinc-500">{filtered.length} cartas · Solo exhibición y cotización</p>
+                <p className="text-sm text-zinc-500">{grouped.length} cartas únicas · {filtered.reduce((a,c)=>a+c.quantity,0)} unidades totales · Solo exhibición y cotización</p>
               </div>
               <Button variant="outline" size="sm" onClick={() => setContactOpen(true)}>
                 <Mail size={14} /> Cotizar cartas
@@ -105,12 +122,13 @@ export function CatalogPage() {
               onViewChange={setCatalogView}
               editions={editions}
               owners={owners}
+              hideOwner
             />
 
             {catalogView === 'grid' ? (
-              <CardGrid cards={filtered} onSelect={handleSelect} />
+              <CardGrid cards={grouped} onSelect={handleSelect} />
             ) : (
-              <CardTable cards={filtered} onSelect={handleSelect} />
+              <CardTable cards={grouped} onSelect={handleSelect} />
             )}
           </div>
         )}

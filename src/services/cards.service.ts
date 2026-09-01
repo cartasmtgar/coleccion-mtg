@@ -20,6 +20,7 @@ const MOCK_CARDS: Card[] = [
     scryfall_id: 'a3fb8a3b-2f8c-4a1a-9b1a-1234567890aa',
     scryfall_uri: 'https://scryfall.com/card/mma/203/lightning-bolt',
     image_url: 'https://cards.scryfall.io/normal/front/a/3/a3fb8a3b-2f8c-4a1a-9b1a-1234567890aa.jpg',
+    goldfish_url: null,
     created_at: new Date().toISOString(),
   },
   {
@@ -39,6 +40,7 @@ const MOCK_CARDS: Card[] = [
     scryfall_id: 'b2',
     scryfall_uri: 'https://scryfall.com/card/mma/122/tarmogoyf',
     image_url: 'https://cards.scryfall.io/normal/front/0/1/011e6a3e-0f8c-4a1e-9b1a-1234567890bb.jpg',
+    goldfish_url: null,
     created_at: new Date().toISOString(),
   },
   {
@@ -58,6 +60,7 @@ const MOCK_CARDS: Card[] = [
     scryfall_id: 'c3',
     scryfall_uri: 'https://scryfall.com/card/lea/232/black-lotus',
     image_url: 'https://cards.scryfall.io/normal/front/b/d/bd8faae2-337d-4a55-8d3d-1234567890cc.jpg',
+    goldfish_url: null,
     created_at: new Date().toISOString(),
   },
   {
@@ -77,6 +80,7 @@ const MOCK_CARDS: Card[] = [
     scryfall_id: 'd4',
     scryfall_uri: 'https://scryfall.com/card/all/55/force-of-will',
     image_url: null,
+    goldfish_url: null,
     created_at: new Date().toISOString(),
   },
 ]

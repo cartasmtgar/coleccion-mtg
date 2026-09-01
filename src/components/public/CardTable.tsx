@@ -1,7 +1,7 @@
 import { formatPrice } from '../../lib/utils'
 import type { Card } from '../../types/card'
 
-export function CardTable({ cards, onSelect }: { cards: Card[]; onSelect: (c: Card) => void }) {
+export function CardTable({ cards, onSelect }: { cards: (Card & { _total?: number; _langs?: Record<string, number> })[]; onSelect: (c: Card) => void }) {
   if (cards.length === 0) {
     return <p className="py-12 text-center text-zinc-500">No hay resultados.</p>
   }
@@ -32,9 +32,14 @@ export function CardTable({ cards, onSelect }: { cards: Card[]; onSelect: (c: Ca
               </td>
               <td className="px-4 py-3 text-zinc-300">{c.edition ?? '—'}</td>
               <td className="px-4 py-3 text-zinc-300">{c.rarity ?? '—'}</td>
-              <td className="px-4 py-3 text-zinc-300">{c.language}</td>
-              <td className="px-4 py-3 text-zinc-300">{c.condition}</td>
-              <td className="px-4 py-3 text-zinc-300">x{c.quantity}</td>
+              <td className="px-4 py-3 text-zinc-300">
+                {c.language}
+                {(c as unknown as { _langs?: Record<string, number> })._langs && Object.keys((c as unknown as { _langs?: Record<string, number> })._langs!).length > 1
+                  ? ` (${Object.entries((c as unknown as { _langs: Record<string, number> })._langs).map(([l,q])=>`${l} x${q}`).join(', ')})`
+                  : ''}
+              </td>
+              <td className="px-4 py-3 text-zinc-300">{c.condition ?? '—'}</td>
+              <td className="px-4 py-3 text-zinc-300">x{(c as unknown as { _total?: number })._total ?? c.quantity}</td>
               <td className="px-4 py-3 text-right font-medium text-amber-400">{formatPrice(c.price_usd)}</td>
             </tr>
           ))}

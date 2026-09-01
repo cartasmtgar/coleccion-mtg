@@ -3,7 +3,9 @@ import { formatPrice } from '../../lib/utils'
 import type { Card } from '../../types/card'
 import { RARITY_LABELS } from '../../types/card'
 
-export function CardGrid({ cards, onSelect }: { cards: Card[]; onSelect: (c: Card) => void }) {
+type AggregatedCard = Card & { _total?: number; _langs?: Record<string, number> }
+
+export function CardGrid({ cards, onSelect }: { cards: (Card & { _total?: number; _langs?: Record<string, number> })[]; onSelect: (c: Card) => void }) {
   if (cards.length === 0) {
     return <p className="py-12 text-center text-zinc-500">No se encontraron cartas con los filtros actuales.</p>
   }
@@ -41,11 +43,16 @@ export function CardGrid({ cards, onSelect }: { cards: Card[]; onSelect: (c: Car
                 </Badge>
               )}
               {card.edition && <Badge variant="outline">{card.edition}</Badge>}
-              <Badge variant="outline">{card.language}</Badge>
+              <Badge variant="outline">{(card as AggregatedCard).language}</Badge>
+              {(card as AggregatedCard)._langs && Object.keys((card as AggregatedCard)._langs!).length > 1 && (
+                <Badge variant="outline" className="bg-amber-900/20 text-amber-300 border-amber-700/30">
+                  {Object.entries((card as AggregatedCard)._langs!).map(([l,q])=>`${l} x${q}`).join(' · ')}
+                </Badge>
+              )}
             </div>
             <div className="flex items-center justify-between pt-1 text-xs text-zinc-400">
               <span>
-                {card.condition} · x{card.quantity}
+                {(card as AggregatedCard)._total ? `Total x${(card as AggregatedCard)._total}` : `x${card.quantity}`}{card.condition ? ` · ${card.condition}` : ''}
               </span>
               <span className="font-semibold text-amber-400">{formatPrice(card.price_usd)}</span>
             </div>

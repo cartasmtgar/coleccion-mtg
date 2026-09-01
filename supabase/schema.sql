@@ -15,19 +15,41 @@ create table if not exists public.cards (
   quantity integer not null default 1 check (quantity >= 0),
   type text,
   edition text,
-  rarity text check (rarity in ('common','uncommon','rare','mythic','special','bonus') or rarity is null),
+  rarity text check (rarity in ('common','uncommon','rare','mythic','special','bonus','basic') or rarity is null),
   year text,
   language text not null default 'ES' check (language in ('ES','EN','JP','FR','DE','IT','PT','RU','CN','KR') or language ~ '^[A-Z]{2}$'),
-  condition text not null default 'NM' check (condition in ('NM','LP','MP','HP','DMG')),
+  condition text check (condition in ('NM','LP','MP','HP','DMG') or condition is null),
   owner text,
   notes text,
   price_usd numeric(10,2),
-  scryfall_id text unique,
+  scryfall_id text,
   scryfall_uri text,
   image_url text,
+  goldfish_url text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Migración para instalaciones previas (idempotente)
+alter table public.cards add column if not exists goldfish_url text;
+alter table public.cards alter column condition drop not null;
+alter table public.cards alter column condition drop default;
+-- Nota: el check de rarity con 'basic' se aplica solo en creación; para tablas existentes recrear check si es necesario:
+do $$ begin
+  alter table public.cards drop constraint if exists cards_rarity_check;
+exception when undefined_object then null; end $$;
+alter table public.cards add constraint cards_rarity_check check (rarity in ('common','uncommon','rare','mythic','special','bonus','basic') or rarity is null);
+
+do $$ begin
+  alter table public.cards drop constraint if exists cards_condition_check;
+exception when undefined_object then null; end $$;
+alter table public.cards add constraint cards_condition_check check (condition in ('NM','LP','MP','HP','DMG') or condition is null);
+
+do $$ begin
+  alter table public.cards drop constraint if exists cards_scryfall_id_unique;
+exception when undefined_object then null; end $$;
+-- scryfall_id ya no unique estricto para permitir múltiples filas antes de sync; índice queda sin unique
+-- Si existía constraint unique, lo quitamos para permitir null duplicates
 
 -- Índices para búsqueda y filtros
 create index if not exists idx_cards_name_es on public.cards using gin (to_tsvector('spanish', name_es));
@@ -37,6 +59,7 @@ create index if not exists idx_cards_rarity on public.cards (rarity);
 create index if not exists idx_cards_language on public.cards (language);
 create index if not exists idx_cards_owner on public.cards (owner);
 create index if not exists idx_cards_scryfall_id on public.cards (scryfall_id);
+create index if not exists idx_cards_goldfish_url on public.cards (goldfish_url);
 create index if not exists idx_cards_created_at on public.cards (created_at desc);
 
 -- Trigger para updated_at

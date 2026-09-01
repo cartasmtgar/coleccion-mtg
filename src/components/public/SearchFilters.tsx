@@ -10,9 +10,10 @@ interface Props {
   onViewChange: (v: CatalogView) => void
   editions: string[]
   owners: string[]
+  hideOwner?: boolean
 }
 
-export function SearchFilters({ filters, onChange, view, onViewChange, editions, owners }: Props) {
+export function SearchFilters({ filters, onChange, view, onViewChange, editions, owners, hideOwner }: Props) {
   return (
     <div className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -82,14 +83,16 @@ export function SearchFilters({ filters, onChange, view, onViewChange, editions,
           <option value="DMG">DMG</option>
         </Select>
 
-        <Select value={filters.owner} onChange={(e) => onChange({ owner: e.target.value })}>
-          <option value="">Dueño (solo catálogo interno)</option>
-          {owners.map((o) => (
-            <option key={o} value={o}>
-              {o}
-            </option>
-          ))}
-        </Select>
+        {!hideOwner && (
+          <Select value={filters.owner} onChange={(e) => onChange({ owner: e.target.value })}>
+            <option value="">Dueño</option>
+            {owners.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </Select>
+        )}
 
         <Select value={filters.type} onChange={(e) => onChange({ type: e.target.value })}>
           <option value="">Tipo</option>

@@ -22,13 +22,14 @@ export function CardForm({ open, onClose, onSave, initial }: Props) {
     rarity: initial?.rarity ?? 'common',
     year: initial?.year ?? new Date().getFullYear().toString(),
     language: initial?.language ?? 'ES',
-    condition: initial?.condition ?? 'NM',
+    condition: initial?.condition ?? null,
     owner: initial?.owner ?? '',
     notes: initial?.notes ?? '',
     price_usd: initial?.price_usd ?? null,
     scryfall_id: initial?.scryfall_id ?? '',
     scryfall_uri: initial?.scryfall_uri ?? '',
     image_url: initial?.image_url ?? '',
+    goldfish_url: initial?.goldfish_url ?? '',
   }))
 
   const key = initial?.id ?? 'new'
@@ -44,13 +45,14 @@ export function CardForm({ open, onClose, onSave, initial }: Props) {
         rarity: initial?.rarity ?? 'common',
         year: initial?.year ?? new Date().getFullYear().toString(),
         language: initial?.language ?? 'ES',
-        condition: initial?.condition ?? 'NM',
+        condition: initial?.condition ?? null,
         owner: initial?.owner ?? '',
         notes: initial?.notes ?? '',
         price_usd: initial?.price_usd ?? null,
         scryfall_id: initial?.scryfall_id ?? '',
         scryfall_uri: initial?.scryfall_uri ?? '',
         image_url: initial?.image_url ?? '',
+        goldfish_url: initial?.goldfish_url ?? '',
       })
     }
   }, [open, initial])
@@ -92,6 +94,7 @@ export function CardForm({ open, onClose, onSave, initial }: Props) {
               <option value="mythic">Mítica</option>
               <option value="special">Especial</option>
               <option value="bonus">Bonus</option>
+              <option value="basic">Tierra Básica</option>
             </Select>
           </div>
           <div>
@@ -108,7 +111,8 @@ export function CardForm({ open, onClose, onSave, initial }: Props) {
           </div>
           <div>
             <Label>Condición</Label>
-            <Select value={form.condition} onChange={(e) => setForm({ ...form, condition: e.target.value })}>
+            <Select value={form.condition ?? ''} onChange={(e) => setForm({ ...form, condition: e.target.value || null })}>
+              <option value="">— Vacía —</option>
               {CONDITIONS.map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
@@ -129,6 +133,10 @@ export function CardForm({ open, onClose, onSave, initial }: Props) {
           <div className="sm:col-span-2">
             <Label>Scryfall ID (para sync)</Label>
             <Input value={form.scryfall_id ?? ''} onChange={(e) => setForm({ ...form, scryfall_id: e.target.value })} placeholder="UUID de Scryfall" />
+          </div>
+          <div className="sm:col-span-2">
+            <Label>Link Goldfish (referencia, no se reemplaza)</Label>
+            <Input value={form.goldfish_url ?? ''} onChange={(e) => setForm({ ...form, goldfish_url: e.target.value })} placeholder="https://www.mtggoldfish.com/price/..." />
           </div>
           <div className="sm:col-span-2">
             <Label>Notas privadas</Label>

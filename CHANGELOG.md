@@ -14,6 +14,22 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ### Changed
 - `AGENTS.md` — workflow ahora exige actualizar `ROADMAP.md` junto a `CHANGELOG.md`.
 
+## [0.3.0] - 2026-09-01
+
+### Added
+- `supabase/schema.sql` — campo `goldfish_url text`, `rarity` acepta `basic`, `condition` nullable.
+- `scripts/import-xlsx.mjs` — importa `coleccion.xlsx` (3 pestañas, 2209 filas -> 2201 únicas tras agrupar duplicados exactos), genera `supabase/seed_import.sql` + `seed_import.json`. `goldfish_url` se preserva como referencia canónica.
+- Catálogo agrupado por `goldfish_url` con total global + desglose por idioma (`ES x / EN x`) en `CardGrid`/`CardTable`.
+
+### Changed
+- `src/types/card.ts` — añade `basic` y `goldfish_url`.
+- `src/pages/CatalogPage.tsx` — agrupa por `goldfish_url` (no por `owner`), oculta filtro `owner` en público.
+- `src/components/admin/CardForm.tsx` — añade campo Goldfish, permite `condition` vacía y `basic`.
+- `src/components/public/CardDetail.tsx` — muestra link Goldfish y desglose de idiomas.
+
+### Removed
+- Ruido de precio `Precio`/`Total` (ahora `price_usd=null`, sync Scryfall futuro).
+
 ## [0.2.0] - 2026-09-01
 
 ### Added

@@ -1,5 +1,5 @@
-export type Rarity = 'common' | 'uncommon' | 'rare' | 'mythic' | 'special' | 'bonus'
-export type Condition = 'NM' | 'LP' | 'MP' | 'HP' | 'DMG'
+export type Rarity = 'common' | 'uncommon' | 'rare' | 'mythic' | 'special' | 'bonus' | 'basic'
+export type Condition = 'NM' | 'LP' | 'MP' | 'HP' | 'DMG' | null
 export type Language = 'ES' | 'EN' | 'JP' | 'FR' | 'DE' | 'IT' | 'PT' | 'RU' | 'CN' | 'KR'
 
 export interface Card {
@@ -12,13 +12,14 @@ export interface Card {
   rarity: Rarity | null
   year: string | null
   language: Language | string
-  condition: Condition | string
+  condition: Condition | string | null
   owner: string | null
   notes: string | null
   price_usd: number | null
   scryfall_id: string | null
   scryfall_uri: string | null
   image_url: string | null
+  goldfish_url: string | null
   created_at: string
   updated_at?: string
 }
@@ -37,6 +38,7 @@ export const RARITY_LABELS: Record<string, string> = {
   mythic: 'Mítica',
   special: 'Especial',
   bonus: 'Bonus',
+  basic: 'Tierra Básica',
 }
 
 export const CONDITION_LABELS: Record<string, string> = {

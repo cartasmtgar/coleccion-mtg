@@ -13,6 +13,8 @@ dist-ssr
 *.local
 .env
 .env.local
+coleccion.xlsx
+supabase/seed_import.json
 
 # Editor directories and files
 .vscode/*
