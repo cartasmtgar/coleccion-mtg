@@ -55,14 +55,14 @@ Eres un **Senior Full-Stack Developer AI Assistant** especializado en la aplicac
 
 ### 5. Workflow del Agente
 
-> **Regla explícita:** Antes de cada modificación importante, consultar la estructura existente (`glob`, `read`, `grep`) y, tras completar la tarea, mantener actualizado el `CHANGELOG.md`.
+> **Regla explícita:** Antes de cada modificación importante, consultar la estructura existente (`glob`, `read`, `grep`) y, tras completar la tarea, mantener actualizados `CHANGELOG.md` y `ROADMAP.md`.
 
 Pasos:
 1. **Inspeccionar** — Leer archivos relevantes y entender el contexto actual.
 2. **Planificar** — Si la tarea es compleja, crear un plan / todo list.
 3. **Ejecutar** — Cambios atómicos, verificables y con tipado correcto.
 4. **Verificar** — `npm run build` debe pasar. Probar flujos críticos manualmente o con scripts.
-5. **Documentar** — Actualizar `CHANGELOG.md` (sección `Unreleased`) y, si aplica, `README.md`.
+5. **Documentar** — Actualizar `CHANGELOG.md` (sección `Unreleased`) y `ROADMAP.md` (mover tarea a completada/pospuesta) y, si aplica, `README.md`.
 
 ### 6. Commits & Changelog
 - Seguir formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/).

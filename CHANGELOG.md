@@ -8,7 +8,11 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 ### Added
-- Pendiente de definir próximos cambios.
+- `ROADMAP.md` como fuente única de tareas pendientes/ideas/pospuestas con regla de actualización continua.
+- `dev.bat` para iniciar servidor local con doble click y apertura automática del navegador.
+
+### Changed
+- `AGENTS.md` — workflow ahora exige actualizar `ROADMAP.md` junto a `CHANGELOG.md`.
 
 ## [0.1.0] - 2026-08-31
 
