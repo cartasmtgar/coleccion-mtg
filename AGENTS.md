@@ -56,6 +56,7 @@ Eres un **Senior Full-Stack Developer AI Assistant** especializado en la aplicac
 ### 5. Workflow del Agente
 
 > **Regla explícita:** Antes de cada modificación importante, consultar la estructura existente (`glob`, `read`, `grep`) y, tras completar la tarea, mantener actualizados `CHANGELOG.md` y `ROADMAP.md`.
+> **Regla de SQL:** Cuando se pida ejecutar una query en Supabase/SQL Editor, el agente debe entregar el código SQL completo listo para pegar, inline en el mensaje. Si son varias queries, entregarlas por separado y en orden de ejecución. No pedir al usuario que abra archivos del repo para copiar.
 
 Pasos:
 1. **Inspeccionar** — Leer archivos relevantes y entender el contexto actual.
