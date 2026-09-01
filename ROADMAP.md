@@ -8,11 +8,19 @@
 - [x] Scryfall service con rate-limit/cache
 - [x] Catálogo público: SearchFilters, CardGrid, CardTable, CardDetail (precios/legalidades)
 - [x] Panel Admin: CRUD, CardForm, sync individual/masivo
-- [x] ContactModal + navegación Catálogo/Admin
+- [x] ContactModal + navegación
 - [x] `dev.bat` para dev local, GitHub `main` conectado
+- [x] `dev.bat` + `react-router-dom` + Auth
+
+## Estado actual — v0.2.0 (2026-09-01) — Auth y rutas privadas
+- [x] **Auth Admin (Supabase Auth email/password, 1 owner)** — `src/context/AuthContext.tsx:1`, `src/pages/LoginPage.tsx:1`, `src/components/auth/ProtectedRoute.tsx:1`
+- [x] Rutas separadas: `/` Catálogo público (sin botón Admin) y `/admin` protegida (login en `/admin/login`). Código admin solo accesible conociendo ruta + sesión.
+- [x] RLS endurecido: `supabase/schema.sql:68` insert/update/delete ahora con `auth.role()='authenticated'` (antes `true`).
+- [x] Admin desacoplado del catálogo: `src/pages/CatalogPage.tsx:1` y `src/pages/AdminPage.tsx:1`, `src/App.tsx:1` solo ruteo.
 
 ## Próximas tareas — Prioridad Alta
-- [ ] **Auth Admin** — Proteger `/admin` con login Supabase Auth (email+password). Migrar políticas RLS de `using (true)` a `auth.role() = 'authenticated'`. Afecta `src/lib/supabase.ts:1` y `supabase/schema.sql:1`.
+- [ ] **Re-ejecutar RLS en Supabase** — Ejecutar nuevo `supabase/schema.sql` en SQL Editor para aplicar políticas `authenticated` (si ya se ejecutó la versión anterior, hacer `drop policy` + `create policy`).
+- [ ] **Crear usuario admin en Supabase** — Dashboard > Authentication > Users > Add user (email+password). Usar ese login en `/admin/login`.
 - [ ] **Import masivo desde Excel/CSV** — Parser para migrar la hoja original (mapeo columnas -> `Card`). UI en Admin para upload + preview + validación.
 - [ ] **Paginación + búsqueda server-side** — Pasar filtros a Supabase (`ilike`/`eq`) en lugar de filtrado cliente. Necesario con >500 cartas.
 - [ ] **Deploy Netlify pendiente** — Conectar repo, setear `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`, verificar build prod. Ver `netlify.toml:1`.
@@ -34,7 +42,7 @@
 
 ## Pospuestas (no hacer ahora)
 - **Carrito / Pagos** — Explícitamente fuera de alcance (solo cotización vía Contacto). Reevaluar solo si cambia modelo de negocio.
-- **Deploy hasta tener Auth** — Decidido 2026-09-01: posponer Netlify público hasta proteger Admin. Razón: evitar exposición de escritura sin auth.
+- ~~**Deploy hasta tener Auth** — Decidido 2026-09-01: posponer Netlify público hasta proteger Admin.~~ **Resuelto en v0.2.0** — Auth implementado, deploy puede proceder.
 
 ## Cómo actualizar este archivo
 1. Marcar `[x]` al completar y mover a `Estado actual` o `Changelog`.

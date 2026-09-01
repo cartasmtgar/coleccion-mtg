@@ -65,26 +65,22 @@ create policy "Public can read cards"
   using (true);
 
 -- Escritura solo para usuarios autenticados (panel admin)
--- Ajusta según tu estrategia de auth (por ahora permite anon con key; restringe si habilitas auth)
+-- Solo usuarios logueados vía Supabase Auth pueden modificar inventario
 drop policy if exists "Authenticated can insert cards" on public.cards;
 create policy "Authenticated can insert cards"
   on public.cards for insert
-  with check (true);
+  with check (auth.role() = 'authenticated');
 
 drop policy if exists "Authenticated can update cards" on public.cards;
 create policy "Authenticated can update cards"
   on public.cards for update
-  using (true)
-  with check (true);
+  using (auth.role() = 'authenticated')
+  with check (auth.role() = 'authenticated');
 
 drop policy if exists "Authenticated can delete cards" on public.cards;
 create policy "Authenticated can delete cards"
   on public.cards for delete
-  using (true);
-
--- NOTA: Para producción con auth, reemplaza `using (true)` por `auth.role() = 'authenticated'`
--- Ejemplo:
--- create policy "Authenticated can insert cards" on public.cards for insert with check (auth.role() = 'authenticated');
+  using (auth.role() = 'authenticated');
 
 -- ============================================================
 -- Seed opcional (descomenta para pruebas)

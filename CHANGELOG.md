@@ -14,6 +14,19 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ### Changed
 - `AGENTS.md` — workflow ahora exige actualizar `ROADMAP.md` junto a `CHANGELOG.md`.
 
+## [0.2.0] - 2026-09-01
+
+### Added
+- Auth Admin con Supabase Auth (email/password, 1 owner): `src/context/AuthContext.tsx`, `src/pages/LoginPage.tsx`, `src/components/auth/ProtectedRoute.tsx`.
+- Rutas privadas: `/` catálogo público sin botón Admin, `/admin` protegida y `/admin/login`. Acceso solo conociendo ruta + sesión válida.
+
+### Changed
+- `supabase/schema.sql` — RLS de escritura ahora exige `auth.role() = 'authenticated'` (antes `true`).
+- `src/App.tsx` — refactorizado a `react-router-dom` (BrowserRouter/Routes). Catálogo y Admin separados en `src/pages/CatalogPage.tsx` y `src/pages/AdminPage.tsx`.
+
+### Security
+- Admin ya no se expone en navegación pública; todo el código admin queda tras `ProtectedRoute`.
+
 ## [0.1.0] - 2026-08-31
 
 ### Added
