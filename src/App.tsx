@@ -5,6 +5,7 @@ import { CatalogPage } from './pages/CatalogPage'
 import { LoginPage } from './pages/LoginPage'
 import { AdminPage } from './pages/AdminPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { ScryfallDocsPage } from './pages/ScryfallDocsPage'
 
 export default function App() {
   return (
@@ -26,6 +27,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/scryfall"
+            element={
+              <ProtectedRoute>
+                <ScryfallDocsPage />
               </ProtectedRoute>
             }
           />

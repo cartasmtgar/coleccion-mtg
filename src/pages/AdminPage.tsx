@@ -271,6 +271,9 @@ export function AdminPage() {
             <Link to="/admin/dashboard" className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white">
               <LayoutDashboard size={16} /> Dashboard
             </Link>
+            <Link to="/admin/scryfall" className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white">
+              <Sparkles size={16} /> Docs Scryfall
+            </Link>
             <a href="/" target="_blank" rel="noopener noreferrer" className="text-sm text-zinc-400 hover:text-white inline-flex items-center gap-1">
               <ExternalLink size={16} /> Catálogo
             </a>
