@@ -27,8 +27,8 @@ export function CardTable({ cards, onSelect }: { cards: (Card & { _total?: numbe
               className="cursor-pointer hover:bg-zinc-900"
             >
               <td className="px-4 py-3">
-                <div className="font-medium text-white">{c.name_es}</div>
-                {c.name_en && <div className="text-xs text-zinc-500">{c.name_en}</div>}
+                <div className="font-medium text-white">{c.name_en ?? c.name_es}</div>
+                {c.name_es && c.name_en && c.name_en !== c.name_es && <div className="text-xs text-zinc-500">{c.name_es}</div>}
               </td>
               <td className="px-4 py-3 text-zinc-300">{c.edition ?? '—'}</td>
               <td className="px-4 py-3 text-zinc-300">{c.rarity ?? '—'}</td>

@@ -23,11 +23,11 @@ export function CardDetail({
   const text = scryfall?.oracle_text ?? scryfall?.card_faces?.[0]?.oracle_text
 
   return (
-    <Modal open={open} onClose={onClose} title={card.name_es}>
+    <Modal open={open} onClose={onClose} title={card.name_en ?? card.name_es}>
       <div className="grid gap-6 md:grid-cols-[280px_1fr]">
         <div>
           {image ? (
-            <img src={image} alt={card.name_es} className="w-full rounded-xl border border-zinc-800" />
+            <img src={image} alt={card.name_en ?? card.name_es} className="w-full rounded-xl border border-zinc-800" />
           ) : (
             <div className="flex aspect-[2.5/3.5] items-center justify-center rounded-xl border border-zinc-800 bg-zinc-800 text-sm text-zinc-500">
               Sin imagen
@@ -56,7 +56,7 @@ export function CardDetail({
         </div>
 
         <div className="space-y-4">
-          {card.name_en && <p className="text-sm text-zinc-400">{card.name_en}</p>}
+          {card.name_es && card.name_en && card.name_en !== card.name_es && <p className="text-sm text-zinc-400">{card.name_es}</p>}
 
           <div className="flex flex-wrap gap-2">
             {card.edition && <Badge variant="outline">{card.edition}</Badge>}

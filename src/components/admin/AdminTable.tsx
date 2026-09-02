@@ -34,12 +34,12 @@ export function AdminTable({ cards, onEdit, onDelete, onSync, syncingId }: Props
           {cards.map((c) => (
             <tr key={c.id} className="hover:bg-zinc-900">
               <td className="px-3 py-3">
-                <div className="font-medium text-white">{c.name_es}</div>
-                <div className="text-xs text-zinc-500">{c.name_en ?? '—'} · {c.language}</div>
+                <div className="font-medium text-white">{c.name_en ?? c.name_es}</div>
+                <div className="text-xs text-zinc-500">{c.name_en && c.name_es && c.name_en !== c.name_es ? c.name_es : '—'} · {c.language}</div>
               </td>
               <td className="px-3 py-3 text-zinc-300">{c.edition ?? '—'}</td>
               <td className="px-3 py-3 text-zinc-300">{c.owner ?? '—'}</td>
-              <td className="px-3 py-3 text-zinc-300">{c.condition}</td>
+              <td className="px-3 py-3 text-zinc-300">{c.condition ?? '—'}</td>
               <td className="px-3 py-3 text-zinc-300">x{c.quantity}</td>
               <td className="px-3 py-3 text-right text-amber-400">{formatPrice(c.price_usd)}</td>
               <td className="px-3 py-3">
@@ -49,7 +49,7 @@ export function AdminTable({ cards, onEdit, onDelete, onSync, syncingId }: Props
                     size="sm"
                     onClick={() => onSync(c)}
                     disabled={syncingId === c.id}
-                    aria-label={`Sincronizar ${c.name_es}`}
+                    aria-label={`Sincronizar ${c.name_en ?? c.name_es}`}
                     className="h-8 w-8 p-0"
                   >
                     {syncingId === c.id ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}

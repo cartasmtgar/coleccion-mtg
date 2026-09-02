@@ -21,7 +21,7 @@ export function CardGrid({ cards, onSelect }: { cards: (Card & { _total?: number
             {card.image_url ? (
               <img
                 src={card.image_url}
-                alt={card.name_es}
+                alt={card.name_en ?? card.name_es}
                 loading="lazy"
                 className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
               />
@@ -32,9 +32,9 @@ export function CardGrid({ cards, onSelect }: { cards: (Card & { _total?: number
             )}
           </div>
           <div className="space-y-2 p-3">
-            <h3 className="line-clamp-1 font-semibold text-white">{card.name_es}</h3>
-            {card.name_en && card.name_en !== card.name_es && (
-              <p className="line-clamp-1 text-xs text-zinc-500">{card.name_en}</p>
+            <h3 className="line-clamp-1 font-semibold text-white">{card.name_en ?? card.name_es}</h3>
+            {card.name_es && card.name_en && card.name_en !== card.name_es && (
+              <p className="line-clamp-1 text-xs text-zinc-500">{card.name_es}</p>
             )}
             <div className="flex flex-wrap gap-1.5">
               {card.rarity && (
