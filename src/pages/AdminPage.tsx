@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { LogOut, Plus, RefreshCw, Loader2, Sparkles, ArrowLeft } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { SearchFilters } from '../components/public/SearchFilters'
 import { AdminTable } from '../components/admin/AdminTable'
 import { CardForm } from '../components/admin/CardForm'
+import { Pagination } from '../components/ui/Pagination'
 import { useCards } from '../hooks/useCards'
 import { useAuth } from '../context/AuthContext'
 import { DEFAULT_FILTERS, type CardFilters, type CatalogView } from '../types/filters'
@@ -22,6 +23,8 @@ export function AdminPage() {
   const [editing, setEditing] = useState<Card | null>(null)
   const [syncingId, setSyncingId] = useState<string | null>(null)
   const [syncingAll, setSyncingAll] = useState(false)
+  const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(50)
 
   const editions = useMemo(() => [...new Set(cards.map((c) => c.edition).filter(Boolean) as string[])].sort(), [cards])
   const owners = useMemo(() => [...new Set(cards.map((c) => c.owner).filter(Boolean) as string[])].sort(), [cards])
@@ -42,6 +45,15 @@ export function AdminPage() {
       return true
     })
   }, [cards, filters])
+
+  const paginated = useMemo(() => {
+    const start = page * pageSize
+    return filtered.slice(start, start + pageSize)
+  }, [filtered, page, pageSize])
+
+  useEffect(() => {
+    setPage(0)
+  }, [filters, pageSize])
 
   const handleSync = async (card: Card) => {
     setSyncingId(card.id)
@@ -135,7 +147,9 @@ export function AdminPage() {
 
         <SearchFilters filters={filters} onChange={(p) => setFilters((f) => ({ ...f, ...p }))} view={catalogView} onViewChange={setCatalogView} editions={editions} owners={owners} />
 
-        <AdminTable cards={filtered} onEdit={(c) => { setEditing(c); setFormOpen(true) }} onDelete={handleDelete} onSync={handleSync} syncingId={syncingId} />
+        <Pagination page={page} pageSize={pageSize} total={filtered.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
+        <AdminTable cards={paginated} onEdit={(c) => { setEditing(c); setFormOpen(true) }} onDelete={handleDelete} onSync={handleSync} syncingId={syncingId} />
+        <Pagination page={page} pageSize={pageSize} total={filtered.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
 
         <CardForm open={formOpen} onClose={() => { setFormOpen(false); setEditing(null) }} initial={editing} onSave={handleSave} />
       </main>

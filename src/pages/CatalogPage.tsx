@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Mail, Sparkles } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { SearchFilters } from '../components/public/SearchFilters'
@@ -6,6 +6,7 @@ import { CardGrid } from '../components/public/CardGrid'
 import { CardTable } from '../components/public/CardTable'
 import { CardDetail } from '../components/public/CardDetail'
 import { ContactModal } from '../components/public/ContactModal'
+import { Pagination } from '../components/ui/Pagination'
 import { useCards } from '../hooks/useCards'
 import { DEFAULT_FILTERS, type CardFilters, type CatalogView } from '../types/filters'
 import type { Card } from '../types/card'
@@ -20,6 +21,8 @@ export function CatalogPage() {
   const [contactOpen, setContactOpen] = useState(false)
   const [detailCard, setDetailCard] = useState<Card | null>(null)
   const [detailScryfall, setDetailScryfall] = useState<ScryfallCard | null>(null)
+  const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(50)
 
   const editions = useMemo(() => [...new Set(cards.map((c) => c.edition).filter(Boolean) as string[])].sort(), [cards])
   const owners = useMemo(() => [...new Set(cards.map((c) => c.owner).filter(Boolean) as string[])].sort(), [cards])
@@ -50,13 +53,21 @@ export function CatalogPage() {
       if (entry) {
         entry.total += c.quantity
         entry.langs[c.language] = (entry.langs[c.language] ?? 0) + c.quantity
-        // mantener representativa con cantidad total para orden? no necesario
       } else {
         map.set(key, { rep: c, total: c.quantity, langs: { [c.language]: c.quantity } })
       }
     }
     return [...map.values()].map(v => ({ ...v.rep, quantity: v.total, _total: v.total, _langs: v.langs } as Card & { _total: number; _langs: Record<string, number> }))
   }, [filtered])
+
+  const paginated = useMemo(() => {
+    const start = page * pageSize
+    return grouped.slice(start, start + pageSize)
+  }, [grouped, page, pageSize])
+
+  useEffect(() => {
+    setPage(0)
+  }, [filters, pageSize])
 
   const handleSelect = async (card: Card) => {
     setDetailCard(card)
@@ -125,11 +136,13 @@ export function CatalogPage() {
               hideOwner
             />
 
+            <Pagination page={page} pageSize={pageSize} total={grouped.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
             {catalogView === 'grid' ? (
-              <CardGrid cards={grouped} onSelect={handleSelect} />
+              <CardGrid cards={paginated} onSelect={handleSelect} />
             ) : (
-              <CardTable cards={grouped} onSelect={handleSelect} />
+              <CardTable cards={paginated} onSelect={handleSelect} />
             )}
+            <Pagination page={page} pageSize={pageSize} total={grouped.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
           </div>
         )}
       </main>
