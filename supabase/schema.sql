@@ -46,10 +46,14 @@ exception when undefined_object then null; end $$;
 alter table public.cards add constraint cards_condition_check check (condition in ('NM','LP','MP','HP','DMG') or condition is null);
 
 do $$ begin
+  alter table public.cards drop constraint if exists cards_scryfall_id_key;
+exception when undefined_object then null; end $$;
+do $$ begin
   alter table public.cards drop constraint if exists cards_scryfall_id_unique;
 exception when undefined_object then null; end $$;
--- scryfall_id ya no unique estricto para permitir múltiples filas antes de sync; índice queda sin unique
--- Si existía constraint unique, lo quitamos para permitir null duplicates
+drop index if exists public.cards_scryfall_id_key;
+drop index if exists cards_scryfall_id_key;
+-- scryfall_id ya no unique estricto para permitir múltiples filas (misma carta en 3 owners comparte scryfall_id) - causa 409 si queda unique
 
 -- Índices para búsqueda y filtros
 create index if not exists idx_cards_name_es on public.cards using gin (to_tsvector('spanish', name_es));
