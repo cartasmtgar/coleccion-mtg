@@ -90,13 +90,23 @@ let localStore: Card[] = [...MOCK_CARDS]
 export async function getCards(): Promise<Card[]> {
   if (!isSupabaseConfigured || !supabase) return [...localStore]
 
-  const { data, error } = await supabase
-    .from('cards')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  if (error) throw error
-  return (data ?? []) as Card[]
+  // Paginación para superar Max rows=1000 de Data API (tenemos 2201 filas)
+  const pageSize = 1000
+  let all: Card[] = []
+  let from = 0
+  while (true) {
+    const { data, error } = await supabase
+      .from('cards')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .range(from, from + pageSize - 1)
+    if (error) throw error
+    const chunk = (data ?? []) as Card[]
+    all = all.concat(chunk)
+    if (chunk.length < pageSize) break
+    from += pageSize
+  }
+  return all
 }
 
 export async function createCard(payload: Omit<Card, 'id' | 'created_at'>): Promise<Card> {
