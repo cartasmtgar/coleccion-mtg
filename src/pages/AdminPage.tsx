@@ -53,6 +53,7 @@ export function AdminPage() {
       if (filters.edition && c.edition !== filters.edition) return false
       if (filters.rarity && c.rarity !== filters.rarity) return false
       if (filters.language && c.language !== filters.language) return false
+      if (filters.color && c.type !== filters.color) return false
       if (filters.condition && c.condition !== filters.condition) return false
       if (filters.owner && c.owner !== filters.owner) return false
       if (filters.type && c.type && !c.type.toLowerCase().includes(filters.type.toLowerCase())) return false
@@ -114,7 +115,8 @@ export function AdminPage() {
     const language = searchParams.get('language')
     const edition = searchParams.get('edition')
     const type = searchParams.get('type')
-    if (owner || rarity || language || edition || type) {
+    const color = searchParams.get('color')
+    if (owner || rarity || language || edition || type || color) {
       setFilters(f => ({
         ...f,
         owner: owner ?? f.owner,
@@ -122,6 +124,7 @@ export function AdminPage() {
         language: language ?? f.language,
         edition: edition ?? f.edition,
         type: type ?? f.type,
+        color: color ?? f.color,
       }))
     }
   }, []) // solo al montar, para links desde dashboard

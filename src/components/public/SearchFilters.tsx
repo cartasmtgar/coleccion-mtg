@@ -47,7 +47,7 @@ export function SearchFilters({ filters, onChange, view, onViewChange, editions,
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
         <Select value={filters.edition} onChange={(e) => onChange({ edition: e.target.value })}>
           <option value="">Edición (todas)</option>
           {editions.map((ed) => (
@@ -59,19 +59,32 @@ export function SearchFilters({ filters, onChange, view, onViewChange, editions,
 
         <Select value={filters.rarity} onChange={(e) => onChange({ rarity: e.target.value })}>
           <option value="">Rareza</option>
-          <option value="common">Común</option>
-          <option value="uncommon">Infrecuente</option>
-          <option value="rare">Rara</option>
-          <option value="mythic">Mítica</option>
-          <option value="special">Especial</option>
+          <option value="common">Common</option>
+          <option value="uncommon">Uncommon</option>
+          <option value="rare">Rare</option>
+          <option value="mythic">Mythic</option>
+          <option value="special">Special</option>
+          <option value="bonus">Bonus</option>
+          <option value="basic">Basic</option>
         </Select>
 
         <Select value={filters.language} onChange={(e) => onChange({ language: e.target.value })}>
           <option value="">Idioma</option>
           <option value="ES">ES</option>
           <option value="EN">EN</option>
-          <option value="JP">JP</option>
-          <option value="FR">FR</option>
+          <option value="PT">PT</option>
+        </Select>
+
+        <Select value={filters.color} onChange={(e) => onChange({ color: e.target.value })}>
+          <option value="">Color</option>
+          <option value="Blanco">Blanco (W)</option>
+          <option value="Azul">Azul (U)</option>
+          <option value="Negro">Negro (B)</option>
+          <option value="Rojo">Rojo (R)</option>
+          <option value="Verde">Verde (G)</option>
+          <option value="Doradas">Doradas</option>
+          <option value="Artefacto">Artefacto</option>
+          <option value="Tierra">Tierra</option>
         </Select>
 
         <Select value={filters.condition} onChange={(e) => onChange({ condition: e.target.value })}>
@@ -105,7 +118,7 @@ export function SearchFilters({ filters, onChange, view, onViewChange, editions,
         </Select>
       </div>
 
-      {(filters.search || filters.edition || filters.rarity || filters.language || filters.condition || filters.owner || filters.type) && (
+      {(filters.search || filters.edition || filters.rarity || filters.language || filters.color || filters.condition || filters.owner || filters.type) && (
         <div className="flex justify-end">
           <button
             onClick={() =>

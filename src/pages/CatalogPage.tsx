@@ -37,6 +37,7 @@ export function CatalogPage() {
       if (filters.edition && c.edition !== filters.edition) return false
       if (filters.rarity && c.rarity !== filters.rarity) return false
       if (filters.language && c.language !== filters.language) return false
+      if (filters.color && c.type !== filters.color) return false
       if (filters.condition && c.condition !== filters.condition) return false
       if (filters.owner && c.owner !== filters.owner) return false
       if (filters.type && c.type && !c.type.toLowerCase().includes(filters.type.toLowerCase())) return false
