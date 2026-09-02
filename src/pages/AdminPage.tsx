@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { LogOut, Plus, RefreshCw, Loader2, Sparkles, ArrowLeft } from 'lucide-react'
+import { LogOut, Plus, RefreshCw, Loader2, Sparkles, ExternalLink } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { SearchFilters } from '../components/public/SearchFilters'
 import { AdminTable } from '../components/admin/AdminTable'
@@ -118,9 +117,9 @@ export function AdminPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link to="/" className="text-sm text-zinc-400 hover:text-white inline-flex items-center gap-1">
-              <ArrowLeft size={16} /> Catálogo
-            </Link>
+            <a href="/" target="_blank" rel="noopener noreferrer" className="text-sm text-zinc-400 hover:text-white inline-flex items-center gap-1">
+              <ExternalLink size={16} /> Catálogo
+            </a>
             <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut size={16} /> Salir
             </Button>
