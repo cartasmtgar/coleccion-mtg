@@ -67,3 +67,42 @@ export function normalizeCardName(name: string): string {
   // quita espacios dobles, normaliza apóstrofes
   return name.trim().replace(/\s+/g, ' ')
 }
+
+export function getCanonicalEnglishName(card: { name_en?: string | null; name_es?: string | null; goldfish_url?: string | null }): string | null {
+  const en = card.name_en?.trim() || null
+  const es = card.name_es?.trim() || null
+  const gold = parseGoldfishUrl(card.goldfish_url)
+  let slug = gold.cardSlug?.trim() || null
+
+  // Si el slug tiene sufijo de artista (ej Homarid-Tedin) y coincide con en/es, quitar sufijo
+  if (slug && slug.includes('-')) {
+    // Si slug es "Homarid-Tedin" y en es "Homarid", usar en
+    if (en && slug.toLowerCase().startsWith(en.toLowerCase() + '-')) slug = en
+    else if (es && slug.toLowerCase().startsWith(es.toLowerCase() + '-')) slug = es
+    else {
+      // Fallback: si slug contiene '-', y la parte antes del último '-' es un nombre conocido, usar esa parte
+      // Para casos como "Aesthir Glider-B" -> "Aesthir Glider"
+      const lastDash = slug.lastIndexOf('-')
+      if (lastDash > 0) {
+        const base = slug.slice(0, lastDash)
+        // Si base coincide con en o es (sin artista), usar base
+        if (en && base.toLowerCase() === en.toLowerCase()) slug = base
+        else if (es && base.toLowerCase() === es.toLowerCase()) slug = base
+        else if (/^[A-Za-z\s']+$/.test(base) && base.length > 3) {
+          // Heurística: si base parece nombre y sufijo es corto (1-3) o artist (Tedin, Menges etc), usar base
+          const suffix = slug.slice(lastDash + 1)
+          if (suffix.length <= 6 && /^[A-Za-z]+$/.test(suffix)) slug = base
+        }
+      }
+    }
+  }
+
+  // Detectar columnas invertidas: en es español, es es inglés (gold coincide con es)
+  if (en && slug && en.toLowerCase() !== slug.toLowerCase() && es && es.toLowerCase() === slug.toLowerCase()) {
+    return es
+  }
+  if (en) return en
+  if (es) return es
+  if (slug) return slug
+  return null
+}

@@ -13,7 +13,7 @@ import { DEFAULT_FILTERS, type CardFilters, type CatalogView } from '../types/fi
 import type { Card } from '../types/card'
 import type { ScryfallCard } from '../types/scryfall'
 import { fetchByScryfallId, searchScryfallExact, bulkFetchCollection, getScryfallImage, getScryfallPrice } from '../services/scryfall'
-import { editionToSetCode, parseGoldfishUrl } from '../lib/mtg-sets'
+import { editionToSetCode, getCanonicalEnglishName } from '../lib/mtg-sets'
 import * as cardsService from '../services/cards.service'
 
 export function AdminPage() {
@@ -82,12 +82,11 @@ export function AdminPage() {
   const handleSyncAll = async () => {
     // Usa filtrado actual si hay filtros activos, si no todo - siempre re-resuelve por nombre+edición para corregir ediciones erróneas
     const toSync = filtered.length > 0 && filtered.length < cards.length ? filtered : cards
-    // Dedup por nombre canónico + set (usa goldfish slug para filas con columnas invertidas)
+    // Dedup por nombre canónico + set (usa helper que corrige columnas invertidas y sufijos de artista)
     const keyToCards = new Map<string, Card[]>()
     for (const c of toSync) {
       const set = editionToSetCode(c.edition)
-      const goldfish = parseGoldfishUrl(c.goldfish_url)
-      const canonical = (goldfish.cardSlug || c.name_en || c.name_es).toLowerCase()
+      const canonical = (getCanonicalEnglishName(c) || c.name_en || c.name_es || '').toLowerCase()
       const key = `${canonical}|${set ?? ''}`
       const arr = keyToCards.get(key) ?? []
       arr.push(c)
@@ -97,8 +96,7 @@ export function AdminPage() {
     const uniqueIdentifiers = [...keyToCards.entries()].map(([key]) => {
       const [, set] = key.split('|')
       const sample = keyToCards.get(key)![0]
-      const goldfish = parseGoldfishUrl(sample.goldfish_url)
-      const originalName = goldfish.cardSlug || sample.name_en || sample.name_es
+      const originalName = getCanonicalEnglishName(sample) || sample.name_en || sample.name_es || ''
       return set ? { name: originalName, set } : { name: originalName }
     })
 

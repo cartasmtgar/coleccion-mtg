@@ -1,5 +1,5 @@
 import type { ScryfallCard } from '../types/scryfall'
-import { editionToSetCode, normalizeCardName, parseGoldfishUrl } from '../lib/mtg-sets'
+import { editionToSetCode, normalizeCardName, parseGoldfishUrl, getCanonicalEnglishName } from '../lib/mtg-sets'
 
 const SCRYFALL_BASE = 'https://api.scryfall.com'
 const RATE_LIMIT_MS = 100
@@ -44,9 +44,14 @@ export async function searchScryfallExact(
   _lang: string | null,
   _goldfishUrl: string | null,
 ): Promise<ScryfallCard | null> {
-  // Intenta con nombre principal, luego con goldfish slug si es distinto, para cubrir filas con columnas invertidas
-  const goldfish = parseGoldfishUrl(_goldfishUrl)
-  const candidates = [name, goldfish.cardSlug].filter(Boolean) as string[]
+  // Usa helper canónico para cubrir filas con columnas invertidas y sufijos de artista
+  const canonicalFromGold = getCanonicalEnglishName({ name_en: name, name_es: null, goldfish_url: _goldfishUrl })
+  let goldSlug = parseGoldfishUrl(_goldfishUrl).cardSlug
+  // Si gold slug tiene sufijo de artista (Homarid-Tedin) y empieza con el nombre, usar nombre
+  if (goldSlug && goldSlug.includes('-') && normalizeCardName(name).toLowerCase() + '-' === goldSlug.toLowerCase().slice(0, normalizeCardName(name).length + 1).toLowerCase()) {
+    goldSlug = normalizeCardName(name)
+  }
+  const candidates = [name, canonicalFromGold, goldSlug].filter(Boolean) as string[]
   // Deduplicar manteniendo orden
   const uniqueCandidates = [...new Set(candidates.map(c => normalizeCardName(c)))]
 
