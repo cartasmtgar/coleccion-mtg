@@ -23,7 +23,7 @@ export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId,
     if (sortBy !== field) return <ArrowUpDown size={14} className="opacity-40" />
     return sortDir === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />
   }
-  const thCls = 'px-3 py-3 cursor-pointer select-none hover:text-white transition inline-flex items-center gap-1'
+  const thCls = 'inline-flex items-center gap-1.5 cursor-pointer select-none hover:text-white transition uppercase tracking-wider'
   if (cards.length === 0) {
     return <p className="py-10 text-center text-zinc-500">Sin cartas. Agrega la primera.</p>
   }
