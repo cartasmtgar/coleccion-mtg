@@ -12,7 +12,7 @@ import { DEFAULT_FILTERS, type CardFilters, type CatalogView } from '../types/fi
 import type { Card } from '../types/card'
 import type { ScryfallCard } from '../types/scryfall'
 import { fetchByScryfallId, searchScryfallExact, bulkFetchCollection, getScryfallImage, getScryfallPrice } from '../services/scryfall'
-import { editionToSetCode } from '../lib/mtg-sets'
+import { editionToSetCode, parseGoldfishUrl } from '../lib/mtg-sets'
 import * as cardsService from '../services/cards.service'
 
 export function AdminPage() {
@@ -76,7 +76,7 @@ export function AdminPage() {
   const handleSyncAll = async () => {
     // Usa filtrado actual si hay filtros activos, si no todo
     const toSync = filtered.length > 0 && filtered.length < cards.length ? filtered : cards
-    // Dedup por name+set para bulk (muchos owners comparten misma carta)
+    // Dedup por nombre canónico + set (usa goldfish slug para filas con columnas invertidas)
     const keyToCards = new Map<string, Card[]>()
     const idCards: Card[] = []
     for (const c of toSync) {
@@ -84,7 +84,9 @@ export function AdminPage() {
         idCards.push(c)
       } else {
         const set = editionToSetCode(c.edition)
-        const key = `${(c.name_en || c.name_es).toLowerCase()}|${set ?? ''}`
+        const goldfish = parseGoldfishUrl(c.goldfish_url)
+        const canonical = (goldfish.cardSlug || c.name_en || c.name_es).toLowerCase()
+        const key = `${canonical}|${set ?? ''}`
         const arr = keyToCards.get(key) ?? []
         arr.push(c)
         keyToCards.set(key, arr)
@@ -93,9 +95,9 @@ export function AdminPage() {
 
     const uniqueIdentifiers = [...keyToCards.entries()].map(([key]) => {
       const [, set] = key.split('|')
-      // recuperar nombre original con mayúsculas de alguna carta
       const sample = keyToCards.get(key)![0]
-      const originalName = sample.name_en || sample.name_es
+      const goldfish = parseGoldfishUrl(sample.goldfish_url)
+      const originalName = goldfish.cardSlug || sample.name_en || sample.name_es
       return set ? { name: originalName, set } : { name: originalName }
     })
 

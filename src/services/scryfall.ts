@@ -1,5 +1,5 @@
 import type { ScryfallCard } from '../types/scryfall'
-import { editionToSetCode, normalizeCardName } from '../lib/mtg-sets'
+import { editionToSetCode, normalizeCardName, parseGoldfishUrl } from '../lib/mtg-sets'
 
 const SCRYFALL_BASE = 'https://api.scryfall.com'
 const RATE_LIMIT_MS = 100
@@ -44,6 +44,23 @@ export async function searchScryfallExact(
   _lang: string | null,
   _goldfishUrl: string | null,
 ): Promise<ScryfallCard | null> {
+  // Intenta con nombre principal, luego con goldfish slug si es distinto, para cubrir filas con columnas invertidas
+  const goldfish = parseGoldfishUrl(_goldfishUrl)
+  const candidates = [name, goldfish.cardSlug].filter(Boolean) as string[]
+  // Deduplicar manteniendo orden
+  const uniqueCandidates = [...new Set(candidates.map(c => normalizeCardName(c)))]
+
+  for (const candidate of uniqueCandidates) {
+    const result = await searchScryfallExactSingle(candidate, edition)
+    if (result) return result
+  }
+  return null
+}
+
+async function searchScryfallExactSingle(
+  name: string,
+  edition: string | null,
+): Promise<ScryfallCard | null> {
   const normalized = normalizeCardName(name)
   const set = editionToSetCode(edition)
   const cacheKey = `exact:${normalized}:${set ?? 'no-set'}`
@@ -59,7 +76,7 @@ export async function searchScryfallExact(
     } else if (res.status === 429) {
       const retry = Number(res.headers.get('Retry-After') ?? '1') * 1000
       await new Promise((r) => setTimeout(r, retry))
-      return searchScryfallExact(name, edition, _lang, _goldfishUrl)
+      return searchScryfallExactSingle(name, edition)
     } else if (res.ok) {
       const data = (await res.json()) as ScryfallCard
       cache.set(cacheKey, data)
@@ -70,7 +87,7 @@ export async function searchScryfallExact(
     }
   }
 
-  // Intento 2: exact sin set (lang no se usa para named, pero sirve para validar)
+  // Intento 2: exact sin set
   await throttle()
   const url2 = `${SCRYFALL_BASE}/cards/named?exact=${encodeURIComponent(normalized)}`
   const res2 = await fetch(url2)
@@ -82,7 +99,7 @@ export async function searchScryfallExact(
     if (res3.status === 404) return null
     if (res3.status === 429) {
       await new Promise((r) => setTimeout(r, 1200))
-      return searchScryfallExact(name, edition, _lang, _goldfishUrl)
+      return searchScryfallExactSingle(name, edition)
     }
     if (!res3.ok) throw new Error(`Scryfall fuzzy error ${res3.status}`)
     const data3 = (await res3.json()) as ScryfallCard
@@ -92,7 +109,7 @@ export async function searchScryfallExact(
   }
   if (res2.status === 429) {
     await new Promise((r) => setTimeout(r, 1200))
-    return searchScryfallExact(name, edition, _lang, _goldfishUrl)
+    return searchScryfallExactSingle(name, edition)
   }
   if (!res2.ok) throw new Error(`Scryfall exact error ${res2.status}`)
   const data2 = (await res2.json()) as ScryfallCard
