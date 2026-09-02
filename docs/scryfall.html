@@ -31,12 +31,20 @@
 <!-- Estado -->
 <div id="status" class="rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-xs text-zinc-400">Cargando carta ejemplo y symbology…</div>
 
+<!-- Buscador -->
+<div class="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 flex flex-col md:flex-row gap-2">
+  <input id="searchName" placeholder="Nombre exacto en inglés (ej: Ghazbán Ogre, Man-o-War, Lightning Bolt)" class="flex-1 rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-2.5 text-sm placeholder:text-zinc-500 focus:border-amber-500 focus:outline-none" />
+  <input id="searchSet" placeholder="Set (opcional, ej: vis, 4ed, chr)" class="w-full md:w-40 rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-2.5 text-sm placeholder:text-zinc-500 focus:border-amber-500 focus:outline-none" />
+  <button id="btnSearch" class="rounded-xl bg-amber-500 px-6 py-2.5 text-sm font-bold text-zinc-900 hover:bg-amber-400">Buscar</button>
+  <button id="btnRandom" class="rounded-xl bg-zinc-800 px-4 py-2.5 text-sm hover:bg-zinc-700">Aleatoria</button>
+</div>
+
 <!-- Carta ejemplo -->
 <section class="rounded-2xl border border-zinc-800 bg-zinc-900 overflow-hidden card">
   <div class="p-4 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-2">
-    <h2 class="font-bold">Carta ejemplo viva — <span class="text-amber-400">Shield Sphere · Alliances (all/129)</span></h2>
+    <h2 class="font-bold">Carta viva — <span id="cardTitle" class="text-amber-400">Shield Sphere · Alliances (all/129)</span></h2>
     <div class="flex gap-2 text-xs">
-      <button id="btnReload" class="rounded-lg bg-zinc-800 px-3 py-1.5 hover:bg-zinc-700">Recargar carta</button>
+      <button id="btnReload" class="rounded-lg bg-zinc-800 px-3 py-1.5 hover:bg-zinc-700">Recargar ejemplo</button>
       <a id="scryfallLink" href="#" target="_blank" class="rounded-lg bg-amber-500 text-zinc-900 px-3 py-1.5 font-semibold hover:bg-amber-400">Abrir en Scryfall ↗</a>
     </div>
   </div>
@@ -122,15 +130,16 @@ const statusEl = document.getElementById('status');
 const setStatus = (t)=> statusEl.textContent = t;
 
 async function fetchJson(url){
-  const r = await fetch(url, { headers: { 'Accept': 'application/json', 'User-Agent': 'ColeccionMTG/1.0' }});
+  const r = await fetch(url, { headers: { 'Accept': 'application/json' }});
   if(!r.ok) throw new Error(url+' '+r.status);
   return r.json();
 }
 
-async function loadCard(){
+async function loadCardBy(name, set){
   try{
-    setStatus('Cargando Shield Sphere · Alliances…');
-    const card = await fetchJson('https://api.scryfall.com/cards/named?exact=Shield%20Sphere&set=all');
+    const q = set ? `?exact=${encodeURIComponent(name)}&set=${encodeURIComponent(set)}` : `?exact=${encodeURIComponent(name)}`;
+    setStatus(`Cargando ${name}${set ? ' · '+set : ''}…`);
+    const card = await fetchJson('https://api.scryfall.com/cards/named'+q);
     document.getElementById('cardImg').src = card.image_uris?.normal || card.card_faces?.[0]?.image_uris?.normal || '';
     const setLink = (id, url)=> { const a=document.getElementById(id); if(url){a.href=url; a.classList.remove('opacity-40')} else a.classList.add('opacity-40') };
     setLink('linkSmall', card.image_uris?.small);
@@ -139,6 +148,7 @@ async function loadCard(){
     setLink('linkPng', card.image_uris?.png);
     setLink('linkArt', card.image_uris?.art_crop);
     setLink('linkBorder', card.image_uris?.border_crop);
+    document.getElementById('cardTitle').textContent = card.name + ' · ' + card.set_name + ' ('+card.set+'/'+card.collector_number+')';
     document.getElementById('fName').textContent = card.name + (card.printed_name && card.printed_name!==card.name ? ' / '+card.printed_name : '');
     document.getElementById('fPrinted').textContent = card.printed_name ? 'printed_name: '+card.printed_name : '';
     document.getElementById('fMana').textContent = card.mana_cost || '—';
@@ -164,12 +174,22 @@ async function loadCard(){
 async function loadSymbology(){
   try{
     const data = await fetchJson('https://api.scryfall.com/symbology');
-    const symbols = data.data; // array
+    let symbols = data.data;
+    // Prioriza maná básico W U B R G + incoloro y tap
+    const priority = ['{W}','{U}','{B}','{R}','{G}','{C}','{S}','{T}','{Q}','{E}','{X}','{2}','{3}'];
+    symbols.sort((a,b)=> {
+      const ia = priority.indexOf(a.symbol);
+      const ib = priority.indexOf(b.symbol);
+      if(ia!==-1 && ib!==-1) return ia-ib;
+      if(ia!==-1) return -1;
+      if(ib!==-1) return 1;
+      return 0;
+    });
     const contA = document.getElementById('manaA');
     const contB = document.getElementById('manaB');
-    contA.innerHTML = symbols.slice(0,24).map(s=> `<div class="flex flex-col items-center gap-1 rounded-xl bg-zinc-800 p-2 min-w-[72px]"><img src="${s.svg_uri}" alt="${s.symbol}" class="h-8 w-8" loading="lazy"><span class="mono text-xs">${s.symbol}</span><span class="text-xs text-zinc-500">${s.english||''}</span></div>`).join('');
-    // Inline: fetch each svg and embed
-    for(const s of symbols.slice(0,12)){
+    contA.innerHTML = symbols.slice(0,32).map(s=> `<div class="flex flex-col items-center gap-1 rounded-xl bg-zinc-800 p-2 min-w-[72px]"><img src="${s.svg_uri}" alt="${s.symbol}" class="h-8 w-8" loading="lazy"><span class="mono text-xs">${s.symbol}</span><span class="text-xs text-zinc-500">${s.english||''}</span></div>`).join('');
+    // Inline: fetch each svg and embed (primeros 16 con colores básicos primero)
+    for(const s of symbols.slice(0,16)){
       try{
         const svgText = await (await fetch(s.svg_uri)).text();
         const div = document.createElement('div');
@@ -178,7 +198,7 @@ async function loadSymbology(){
         contB.appendChild(div);
       }catch{}
     }
-  }catch(e){ console.error(e); }
+  }catch(e){ console.error(e); setStatus('Error symbology: '+e.message); }
 }
 
 async function loadSets(){
@@ -240,7 +260,19 @@ function loadMap(){
   document.getElementById('mapBody').innerHTML = rows.map(([a,b,c,d,e])=> `<tr><td class="py-2 mono">${a}</td><td class="py-2">${b}</td><td class="py-2">${c}</td><td class="py-2">${d}</td><td class="py-2 text-zinc-400">${e}</td></tr>`).join('');
 }
 
+function loadCard(){ return loadCardBy('Shield Sphere','all'); }
 document.getElementById('btnReload').addEventListener('click', loadCard);
+document.getElementById('btnSearch').addEventListener('click', ()=>{
+  const n=document.getElementById('searchName').value.trim();
+  const s=document.getElementById('searchSet').value.trim();
+  if(!n) return setStatus('Ingresa un nombre');
+  loadCardBy(n, s||null);
+});
+document.getElementById('searchName').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('btnSearch').click(); });
+document.getElementById('searchSet').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('btnSearch').click(); });
+document.getElementById('btnRandom').addEventListener('click', async ()=>{
+  try{ setStatus('Cargando aleatoria…'); const c=await fetchJson('https://api.scryfall.com/cards/random'); document.getElementById('searchName').value=c.name; document.getElementById('searchSet').value=c.set; await loadCardBy(c.name, c.set); }catch(e){ setStatus('Error aleatoria: '+e.message); }
+});
 loadCard();
 loadSymbology();
 loadSets();
