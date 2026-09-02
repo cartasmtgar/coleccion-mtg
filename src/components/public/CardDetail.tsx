@@ -26,13 +26,15 @@ export function CardDetail({
     <Modal open={open} onClose={onClose} title={card.name_en ?? card.name_es}>
       <div className="grid gap-6 md:grid-cols-[280px_1fr]">
         <div>
-          {image ? (
-            <img src={image} alt={card.name_en ?? card.name_es} className="w-full rounded-xl border border-zinc-800" />
-          ) : (
-            <div className="flex aspect-[2.5/3.5] items-center justify-center rounded-xl border border-zinc-800 bg-zinc-800 text-sm text-zinc-500">
-              Sin imagen
-            </div>
-          )}
+          <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
+            {image ? (
+              <img src={image} alt={card.name_en ?? card.name_es} className="w-full scale-[1.02] object-cover" />
+            ) : (
+              <div className="flex aspect-[2.5/3.5] items-center justify-center text-sm text-zinc-500">
+                Sin imagen
+              </div>
+            )}
+          </div>
           {card.scryfall_uri && (
             <a
               href={card.scryfall_uri}

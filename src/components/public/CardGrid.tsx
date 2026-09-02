@@ -16,13 +16,13 @@ export function CardGrid({ cards, onSelect }: { cards: (Card & { _total?: number
           onClick={() => onSelect(card)}
           className="group cursor-pointer overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 transition hover:border-amber-600/50 hover:shadow-lg hover:shadow-amber-900/10"
         >
-          <div className="aspect-[2.5/3.5] overflow-hidden bg-zinc-800">
+          <div className="aspect-[2.5/3.5] overflow-hidden bg-zinc-900 rounded-t-xl">
             {card.image_url ? (
               <img
                 src={card.image_url}
                 alt={card.name_en ?? card.name_es}
                 loading="lazy"
-                className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                className="h-full w-full object-cover scale-[1.02] transition duration-300 group-hover:scale-[1.05]"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900 p-6 text-center">

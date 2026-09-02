@@ -124,11 +124,11 @@ async function searchScryfallExactSingle(
 }
 
 export function getScryfallImage(card: ScryfallCard): string | null {
-  // Opción A: usar png transparente para evitar esquinas blancas (requiere re-sync)
-  if (card.image_uris?.png) return card.image_uris.png
-  if (card.card_faces?.[0]?.image_uris?.png) return card.card_faces[0].image_uris.png
+  // A normal + truco CSS (scale) para evitar re-sync masivo de 1.6MB png
   if (card.image_uris?.normal) return card.image_uris.normal
   if (card.card_faces?.[0]?.image_uris?.normal) return card.card_faces[0].image_uris.normal
+  if (card.image_uris?.png) return card.image_uris.png
+  if (card.card_faces?.[0]?.image_uris?.png) return card.card_faces[0].image_uris.png
   return null
 }
 
