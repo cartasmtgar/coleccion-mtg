@@ -50,15 +50,16 @@ export function AdminTable({ cards, onEdit, onDelete, onSync, syncingId }: Props
                     onClick={() => onSync(c)}
                     disabled={syncingId === c.id}
                     aria-label={`Sincronizar ${c.name_en ?? c.name_es}`}
-                    className="h-8 w-8 p-0"
+                    title="Sincronizar con Scryfall"
+                    className="h-9 w-9 p-0"
                   >
-                    {syncingId === c.id ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                    {syncingId === c.id ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => onEdit(c)} aria-label="Editar" className="h-8 w-8 p-0">
-                    <Pencil size={14} />
+                  <Button variant="ghost" size="sm" onClick={() => onEdit(c)} aria-label="Editar" title="Editar carta" className="h-9 w-9 p-0">
+                    <Pencil size={18} />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => onDelete(c.id)} aria-label="Eliminar" className="h-8 w-8 p-0 text-red-400 hover:text-red-300">
-                    <Trash2 size={14} />
+                  <Button variant="ghost" size="sm" onClick={() => onDelete(c.id)} aria-label="Eliminar" title="Eliminar carta" className="h-9 w-9 p-0 text-red-400 hover:text-red-300">
+                    <Trash2 size={18} />
                   </Button>
                 </div>
               </td>
