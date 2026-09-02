@@ -67,9 +67,8 @@ export function AdminPage() {
   const handleSync = async (card: Card) => {
     setSyncingId(card.id)
     try {
-      let sc: ScryfallCard | null = null
-      if (card.scryfall_id) sc = await fetchByScryfallId(card.scryfall_id)
-      else sc = await searchScryfallExact(card.name_en || card.name_es, card.edition, card.language, card.goldfish_url)
+      // Siempre busca por nombre+edición para corregir ediciones erróneas previas (no usa scryfall_id cacheado)
+      const sc = await searchScryfallExact(card.name_en || card.name_es, card.edition, card.language, card.goldfish_url)
       if (!sc) throw new Error('No se encontró en Scryfall')
       await cardsService.syncCardWithScryfall(card, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc) })
       await refresh()
@@ -81,23 +80,18 @@ export function AdminPage() {
   }
 
   const handleSyncAll = async () => {
-    // Usa filtrado actual si hay filtros activos, si no todo
+    // Usa filtrado actual si hay filtros activos, si no todo - siempre re-resuelve por nombre+edición para corregir ediciones erróneas
     const toSync = filtered.length > 0 && filtered.length < cards.length ? filtered : cards
     // Dedup por nombre canónico + set (usa goldfish slug para filas con columnas invertidas)
     const keyToCards = new Map<string, Card[]>()
-    const idCards: Card[] = []
     for (const c of toSync) {
-      if (c.scryfall_id) {
-        idCards.push(c)
-      } else {
-        const set = editionToSetCode(c.edition)
-        const goldfish = parseGoldfishUrl(c.goldfish_url)
-        const canonical = (goldfish.cardSlug || c.name_en || c.name_es).toLowerCase()
-        const key = `${canonical}|${set ?? ''}`
-        const arr = keyToCards.get(key) ?? []
-        arr.push(c)
-        keyToCards.set(key, arr)
-      }
+      const set = editionToSetCode(c.edition)
+      const goldfish = parseGoldfishUrl(c.goldfish_url)
+      const canonical = (goldfish.cardSlug || c.name_en || c.name_es).toLowerCase()
+      const key = `${canonical}|${set ?? ''}`
+      const arr = keyToCards.get(key) ?? []
+      arr.push(c)
+      keyToCards.set(key, arr)
     }
 
     const uniqueIdentifiers = [...keyToCards.entries()].map(([key]) => {
@@ -111,37 +105,8 @@ export function AdminPage() {
     setSyncingAll(true)
     setSyncProgress({ done: 0, total: toSync.length })
 
-    // Primero sync por id (si ya tenían scryfall_id, fetch individual bulk por id también via collection)
-    if (idCards.length > 0) {
-      const BATCH = 75
-      for (let i = 0; i < idCards.length; i += BATCH) {
-        const batch = idCards.slice(i, i + BATCH)
-        try {
-          const ids = batch.map(c => ({ id: c.scryfall_id! }))
-          const { data } = await bulkFetchCollection(ids)
-          const byId = new Map(data.map(sc => [sc.id, sc]))
-          for (const card of batch) {
-            const sc = byId.get(card.scryfall_id!)
-            if (sc) {
-              setSyncingId(card.id)
-              await cardsService.syncCardWithScryfall(card, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc) })
-            }
-            setSyncProgress(p => (p ? { done: p.done + 1, total: p.total } : p))
-          }
-        } catch {
-          // fallback individual si bulk falla
-          for (const card of batch) {
-            try {
-              const sc = await fetchByScryfallId(card.scryfall_id!)
-              if (sc) await cardsService.syncCardWithScryfall(card, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc) })
-            } catch { /* ignore */ }
-            setSyncProgress(p => (p ? { done: p.done + 1, total: p.total } : p))
-          }
-        }
-      }
-    }
-
-    // Luego sync por name+set en bulk (75 máx por request)
+    // Sync por name+set en bulk (75 máx por request) - corrige ediciones previas erróneas
+    // Ya no separara por idCards; todos se re-resuelven por nombre+set
     const BATCH = 75
     for (let i = 0; i < uniqueIdentifiers.length; i += BATCH) {
       const batchIds = uniqueIdentifiers.slice(i, i + BATCH)
