@@ -10,7 +10,8 @@ import { useAuth } from '../context/AuthContext'
 import { DEFAULT_FILTERS, type CardFilters, type CatalogView } from '../types/filters'
 import type { Card } from '../types/card'
 import type { ScryfallCard } from '../types/scryfall'
-import { fetchByScryfallId, searchScryfallExact, getScryfallImage, getScryfallPrice } from '../services/scryfall'
+import { fetchByScryfallId, searchScryfallExact, bulkFetchCollection, getScryfallImage, getScryfallPrice } from '../services/scryfall'
+import { editionToSetCode } from '../lib/mtg-sets'
 import * as cardsService from '../services/cards.service'
 
 export function AdminPage() {
@@ -22,6 +23,7 @@ export function AdminPage() {
   const [editing, setEditing] = useState<Card | null>(null)
   const [syncingId, setSyncingId] = useState<string | null>(null)
   const [syncingAll, setSyncingAll] = useState(false)
+  const [syncProgress, setSyncProgress] = useState<{ done: number; total: number } | null>(null)
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(50)
 
@@ -71,22 +73,111 @@ export function AdminPage() {
   }
 
   const handleSyncAll = async () => {
-    setSyncingAll(true)
-    for (const card of cards) {
-      setSyncingId(card.id)
-      try {
-        let sc: ScryfallCard | null = null
-        if (card.scryfall_id) sc = await fetchByScryfallId(card.scryfall_id)
-        else sc = await searchScryfallExact(card.name_en || card.name_es, card.edition, card.language, card.goldfish_url)
-        if (sc) {
-          await cardsService.syncCardWithScryfall(card, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc) })
-        }
-      } catch {
-        // continue
+    // Usa filtrado actual si hay filtros activos, si no todo
+    const toSync = filtered.length > 0 && filtered.length < cards.length ? filtered : cards
+    // Dedup por name+set para bulk (muchos owners comparten misma carta)
+    const keyToCards = new Map<string, Card[]>()
+    const idCards: Card[] = []
+    for (const c of toSync) {
+      if (c.scryfall_id) {
+        idCards.push(c)
+      } else {
+        const set = editionToSetCode(c.edition)
+        const key = `${(c.name_en || c.name_es).toLowerCase()}|${set ?? ''}`
+        const arr = keyToCards.get(key) ?? []
+        arr.push(c)
+        keyToCards.set(key, arr)
       }
     }
+
+    const uniqueIdentifiers = [...keyToCards.entries()].map(([key]) => {
+      const [, set] = key.split('|')
+      // recuperar nombre original con mayúsculas de alguna carta
+      const sample = keyToCards.get(key)![0]
+      const originalName = sample.name_en || sample.name_es
+      return set ? { name: originalName, set } : { name: originalName }
+    })
+
+    setSyncingAll(true)
+    setSyncProgress({ done: 0, total: toSync.length })
+
+    // Primero sync por id (si ya tenían scryfall_id, fetch individual bulk por id también via collection)
+    if (idCards.length > 0) {
+      const BATCH = 75
+      for (let i = 0; i < idCards.length; i += BATCH) {
+        const batch = idCards.slice(i, i + BATCH)
+        try {
+          const ids = batch.map(c => ({ id: c.scryfall_id! }))
+          const { data } = await bulkFetchCollection(ids)
+          const byId = new Map(data.map(sc => [sc.id, sc]))
+          for (const card of batch) {
+            const sc = byId.get(card.scryfall_id!)
+            if (sc) {
+              setSyncingId(card.id)
+              await cardsService.syncCardWithScryfall(card, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc) })
+            }
+            setSyncProgress(p => (p ? { done: p.done + 1, total: p.total } : p))
+          }
+        } catch {
+          // fallback individual si bulk falla
+          for (const card of batch) {
+            try {
+              const sc = await fetchByScryfallId(card.scryfall_id!)
+              if (sc) await cardsService.syncCardWithScryfall(card, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc) })
+            } catch { /* ignore */ }
+            setSyncProgress(p => (p ? { done: p.done + 1, total: p.total } : p))
+          }
+        }
+      }
+    }
+
+    // Luego sync por name+set en bulk (75 máx por request)
+    const BATCH = 75
+    for (let i = 0; i < uniqueIdentifiers.length; i += BATCH) {
+      const batchIds = uniqueIdentifiers.slice(i, i + BATCH)
+      try {
+        const { data } = await bulkFetchCollection(batchIds)
+        // mapear respuesta a key
+        const scByKey = new Map<string, ScryfallCard>()
+        for (const sc of data) {
+          const k = `${sc.name.toLowerCase()}|${sc.set}`
+          scByKey.set(k, sc)
+          // también sin set por si no coincidió
+          if (!scByKey.has(sc.name.toLowerCase() + '|')) scByKey.set(sc.name.toLowerCase() + '|', sc)
+        }
+        for (const ident of batchIds) {
+          const nameKey = `${ident.name!.toLowerCase()}|${ident.set ?? ''}`
+          const sc = scByKey.get(nameKey) ?? scByKey.get(ident.name!.toLowerCase() + '|')
+          const cardsForKey = keyToCards.get(nameKey) ?? []
+          if (sc) {
+            for (const card of cardsForKey) {
+              setSyncingId(card.id)
+              await cardsService.syncCardWithScryfall(card, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc) })
+              setSyncProgress(p => (p ? { done: p.done + 1, total: p.total } : p))
+            }
+          } else {
+            // no encontrado, avanzar contador
+            for (const _card of cardsForKey) setSyncProgress(p => (p ? { done: p.done + 1, total: p.total } : p))
+          }
+        }
+      } catch {
+        // fallback a individual exact si bulk falla
+        for (const ident of batchIds) {
+          const cardsForKey = keyToCards.get(`${ident.name!.toLowerCase()}|${ident.set ?? ''}`) ?? []
+          for (const card of cardsForKey) {
+            try {
+              const sc = await searchScryfallExact(card.name_en || card.name_es, card.edition, card.language, card.goldfish_url)
+              if (sc) await cardsService.syncCardWithScryfall(card, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc) })
+            } catch { /* ignore */ }
+            setSyncProgress(p => (p ? { done: p.done + 1, total: p.total } : p))
+          }
+        }
+      }
+    }
+
     setSyncingId(null)
     setSyncingAll(false)
+    setSyncProgress(null)
     await refresh()
   }
 
@@ -133,14 +224,21 @@ export function AdminPage() {
             <h2 className="text-2xl font-bold text-white">Inventario</h2>
             <p className="text-sm text-zinc-500">{filtered.length} cartas · Ruta privada /admin</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="secondary" size="sm" onClick={handleSyncAll} disabled={syncingAll}>
-              {syncingAll ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
-              {syncingAll ? 'Sincronizando...' : 'Sincronizar todo'}
-            </Button>
-            <Button onClick={() => { setEditing(null); setFormOpen(true) }}>
-              <Plus size={16} /> Agregar Nueva Carta
-            </Button>
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" onClick={handleSyncAll} disabled={syncingAll}>
+                {syncingAll ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+                {syncingAll ? `Sincronizando ${syncProgress ? `${syncProgress.done}/${syncProgress.total}` : '...'}` : `Sincronizar ${filtered.length < cards.length ? `filtradas (${filtered.length})` : 'todo'}`}
+              </Button>
+              <Button onClick={() => { setEditing(null); setFormOpen(true) }}>
+                <Plus size={16} /> Agregar Nueva Carta
+              </Button>
+            </div>
+            {syncProgress && (
+              <div className="h-1.5 w-full max-w-[280px] overflow-hidden rounded-full bg-zinc-800">
+                <div className="h-full bg-amber-500 transition-all" style={{ width: `${Math.round((syncProgress.done / syncProgress.total) * 100)}%` }} />
+              </div>
+            )}
           </div>
         </div>
 

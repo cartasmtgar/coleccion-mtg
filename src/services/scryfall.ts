@@ -112,3 +112,34 @@ export function getScryfallPrice(card: ScryfallCard): number | null {
   if (card.prices.usd_foil) return parseFloat(card.prices.usd_foil)
   return null
 }
+
+export interface BulkResult {
+  data: ScryfallCard[]
+  not_found: unknown[]
+}
+
+export async function bulkFetchCollection(
+  identifiers: Array<{ name?: string; set?: string; id?: string }>,
+): Promise<BulkResult> {
+  await throttle()
+  const res = await fetch(`${SCRYFALL_BASE}/cards/collection`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ identifiers }),
+  })
+  if (res.status === 429) {
+    const retry = Number(res.headers.get('Retry-After') ?? '1') * 1000
+    await new Promise((r) => setTimeout(r, retry))
+    return bulkFetchCollection(identifiers)
+  }
+  if (!res.ok) {
+    const txt = await res.text()
+    throw new Error(`Scryfall collection error ${res.status}: ${txt.slice(0, 300)}`)
+  }
+  const json = (await res.json()) as BulkResult
+  for (const c of json.data) {
+    cache.set(c.id, c)
+    cache.set(`exact:${c.name}:${c.set}`, c)
+  }
+  return json
+}
