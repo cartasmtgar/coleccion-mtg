@@ -25,9 +25,13 @@
 - [x] **Catálogo agrupado:** `src/pages/CatalogPage.tsx:1` agrupa por `goldfish_url` (canónico) mostrando **total global + desglose por idioma** (ES x, EN x, PT x) en `CardGrid.tsx:1` / `CardTable.tsx:1` y detalle. Base mantiene filas por owner separadas, frontend suma automáticamente. `SearchFilters` oculta `owner` en catálogo.
 - [x] **Admin:** `src/components/admin/CardForm.tsx:1` añade campo Goldfish y `basic`, `condition` opcional.
 
+## Estado actual — v0.3.1 (2026-09-02) — Dashboard Admin
+- [x] **Dashboard** `src/pages/DashboardPage.tsx:1` en `/admin/dashboard` (protegido): KPIs (únicas, unidades, valor, % sync), distribución por dueño (progreso), por rareza/idioma, top ediciones/tipos, top 5 valiosas y recientes. Diseño moderno con gradientes y animaciones hover. Link desde `/admin`.
+- [x] **Admin UI:** catálogo abre en nueva pestaña (`ExternalLink`), paginación 50/100/250/500, iconos acciones grandes con tooltip.
+
 ## Próximas tareas — Prioridad Alta
-- [ ] **Ejecutar migración + seed en Supabase** — SQL Editor: 1) correr `supabase/schema.sql` actualizado, 2) correr `supabase/seed_import.sql` (TRUNCATE + 2201 inserts). Verificar `Table Editor` 2201 filas.
-- [ ] **Paginación + búsqueda server-side** — Pasar filtros a Supabase (`ilike`/`eq`) en lugar de filtrado cliente. Necesario con 2201 filas.
+- [x] **Ejecutar migración + seed en Supabase** — Completado 2201 filas (verificado).
+- [ ] **Paginación + búsqueda server-side** — Pasar filtros a Supabase (`ilike`/`eq`) en lugar de filtrado cliente. Paginación cliente ya hecha (50/100/250/500).
 - [ ] **Deploy Netlify pendiente** — Conectar repo, setear `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`, verificar build prod. Ver `netlify.toml:1`.
 
 ## Prioridad Media
