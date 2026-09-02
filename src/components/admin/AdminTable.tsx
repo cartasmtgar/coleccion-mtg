@@ -44,7 +44,7 @@ export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId,
         </thead>
         <tbody className="divide-y divide-zinc-800 bg-zinc-950">
           {cards.map((c) => (
-            <tr key={c.id} className="hover:bg-zinc-900">
+            <tr key={c.id} onClick={() => onView(c)} className="hover:bg-zinc-900 cursor-pointer">
               <td className="px-3 py-3">
                 <div className="font-medium text-white">{c.name_en ?? c.name_es}</div>
                 <div className="text-xs text-zinc-500">{c.name_en && c.name_es && c.name_en !== c.name_es ? c.name_es : '—'} · {c.language}</div>
@@ -56,13 +56,13 @@ export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId,
               <td className="px-3 py-3 text-right text-amber-400">{formatPrice(c.price_usd)}</td>
               <td className="px-3 py-3">
                 <div className="flex justify-end gap-1">
-                  <Button variant="ghost" size="sm" onClick={() => onView(c)} aria-label="Ver detalle" title="Ver detalle" className="h-9 w-9 p-0">
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onView(c) }} aria-label="Ver detalle" title="Ver detalle" className="h-9 w-9 p-0">
                     <Eye size={18} />
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onSync(c)}
+                    onClick={(e) => { e.stopPropagation(); onSync(c) }}
                     disabled={syncingId === c.id}
                     aria-label={`Sincronizar ${c.name_en ?? c.name_es}`}
                     title="Sincronizar con Scryfall"
@@ -70,10 +70,10 @@ export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId,
                   >
                     {syncingId === c.id ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => onEdit(c)} aria-label="Editar" title="Editar carta" className="h-9 w-9 p-0">
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(c) }} aria-label="Editar" title="Editar carta" className="h-9 w-9 p-0">
                     <Pencil size={18} />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => onDelete(c.id)} aria-label="Eliminar" title="Eliminar carta" className="h-9 w-9 p-0 text-red-400 hover:text-red-300">
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onDelete(c.id) }} aria-label="Eliminar" title="Eliminar carta" className="h-9 w-9 p-0 text-red-400 hover:text-red-300">
                     <Trash2 size={18} />
                   </Button>
                 </div>
