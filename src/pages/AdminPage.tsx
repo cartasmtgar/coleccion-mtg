@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext'
 import { DEFAULT_FILTERS, type CardFilters, type CatalogView } from '../types/filters'
 import type { Card } from '../types/card'
 import type { ScryfallCard } from '../types/scryfall'
-import { fetchByScryfallId, searchScryfall, getScryfallImage, getScryfallPrice } from '../services/scryfall'
+import { fetchByScryfallId, searchScryfallExact, getScryfallImage, getScryfallPrice } from '../services/scryfall'
 import * as cardsService from '../services/cards.service'
 
 export function AdminPage() {
@@ -60,7 +60,7 @@ export function AdminPage() {
     try {
       let sc: ScryfallCard | null = null
       if (card.scryfall_id) sc = await fetchByScryfallId(card.scryfall_id)
-      else sc = await searchScryfall(card.name_en ?? card.name_es)
+      else sc = await searchScryfallExact(card.name_en || card.name_es, card.edition, card.language, card.goldfish_url)
       if (!sc) throw new Error('No se encontró en Scryfall')
       await cardsService.syncCardWithScryfall(card, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc) })
       await refresh()
@@ -78,7 +78,7 @@ export function AdminPage() {
       try {
         let sc: ScryfallCard | null = null
         if (card.scryfall_id) sc = await fetchByScryfallId(card.scryfall_id)
-        else sc = await searchScryfall(card.name_en ?? card.name_es)
+        else sc = await searchScryfallExact(card.name_en || card.name_es, card.edition, card.language, card.goldfish_url)
         if (sc) {
           await cardsService.syncCardWithScryfall(card, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc) })
         }
