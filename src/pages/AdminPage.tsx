@@ -13,7 +13,7 @@ import { DEFAULT_FILTERS, type CardFilters, type CatalogView } from '../types/fi
 import type { Card } from '../types/card'
 import type { ScryfallCard } from '../types/scryfall'
 import { fetchByScryfallId, searchScryfallExact, bulkFetchCollection, getScryfallImage, getScryfallPrice } from '../services/scryfall'
-import { editionToSetCode, getCanonicalEnglishName } from '../lib/mtg-sets'
+import { editionToSetCode, getCanonicalEnglishName, normalizeForCompare } from '../lib/mtg-sets'
 import * as cardsService from '../services/cards.service'
 
 export function AdminPage() {
@@ -82,11 +82,11 @@ export function AdminPage() {
   const handleSyncAll = async () => {
     // Usa filtrado actual si hay filtros activos, si no todo - siempre re-resuelve por nombre+edición para corregir ediciones erróneas
     const toSync = filtered.length > 0 && filtered.length < cards.length ? filtered : cards
-    // Dedup por nombre canónico + set (usa helper que corrige columnas invertidas y sufijos de artista)
+    // Dedup por nombre canónico + set (usa helper que corrige columnas invertidas y sufijos de artista) - normalizado para acentos/apóstrofes
     const keyToCards = new Map<string, Card[]>()
     for (const c of toSync) {
       const set = editionToSetCode(c.edition)
-      const canonical = (getCanonicalEnglishName(c) || c.name_en || c.name_es || '').toLowerCase()
+      const canonical = normalizeForCompare(getCanonicalEnglishName(c) || c.name_en || c.name_es || '')
       const key = `${canonical}|${set ?? ''}`
       const arr = keyToCards.get(key) ?? []
       arr.push(c)
@@ -110,17 +110,16 @@ export function AdminPage() {
       const batchIds = uniqueIdentifiers.slice(i, i + BATCH)
       try {
         const { data } = await bulkFetchCollection(batchIds)
-        // mapear respuesta a key
+        // mapear respuesta a key - normalizado para acentos/apóstrofes (Man-o-War vs Man-o'-War, Ghazban vs Ghazbán)
         const scByKey = new Map<string, ScryfallCard>()
         for (const sc of data) {
-          const k = `${sc.name.toLowerCase()}|${sc.set}`
+          const k = `${normalizeForCompare(sc.name)}|${sc.set}`
           scByKey.set(k, sc)
-          // también sin set por si no coincidió
-          if (!scByKey.has(sc.name.toLowerCase() + '|')) scByKey.set(sc.name.toLowerCase() + '|', sc)
+          if (!scByKey.has(normalizeForCompare(sc.name) + '|')) scByKey.set(normalizeForCompare(sc.name) + '|', sc)
         }
         for (const ident of batchIds) {
-          const nameKey = `${ident.name!.toLowerCase()}|${ident.set ?? ''}`
-          const sc = scByKey.get(nameKey) ?? scByKey.get(ident.name!.toLowerCase() + '|')
+          const nameKey = `${normalizeForCompare(ident.name!)}|${ident.set ?? ''}`
+          const sc = scByKey.get(nameKey) ?? scByKey.get(normalizeForCompare(ident.name!) + '|')
           const cardsForKey = keyToCards.get(nameKey) ?? []
           if (sc) {
             for (const card of cardsForKey) {

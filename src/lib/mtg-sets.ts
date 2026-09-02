@@ -68,6 +68,16 @@ export function normalizeCardName(name: string): string {
   return name.trim().replace(/\s+/g, ' ')
 }
 
+export function normalizeForCompare(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[’‘`'-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 export function getCanonicalEnglishName(card: { name_en?: string | null; name_es?: string | null; goldfish_url?: string | null }): string | null {
   const en = card.name_en?.trim() || null
   const es = card.name_es?.trim() || null
