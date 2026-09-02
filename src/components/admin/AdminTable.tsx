@@ -73,7 +73,7 @@ export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId,
                   <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(c) }} aria-label="Editar" title="Editar carta" className="h-9 w-9 p-0">
                     <Pencil size={19} />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onDelete(c.id) }} aria-label="Eliminar" title="Eliminar carta" className="h-9 w-9 p-0 text-red-500 hover:text-red-400">
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onDelete(c.id) }} aria-label="Eliminar" title="Eliminar carta" className="h-9 w-9 p-0 !text-red-500 hover:!text-red-400 hover:bg-red-950/30">
                     <Trash2 size={19} />
                   </Button>
                 </div>
