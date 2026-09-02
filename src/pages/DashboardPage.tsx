@@ -128,15 +128,15 @@ export function DashboardPage() {
                 const pct = Math.round((d.units / stats.totalUnits) * 100)
                 const colors = ['bg-amber-500', 'bg-violet-500', 'bg-emerald-500', 'bg-sky-500']
                 return (
-                  <div key={owner} className="space-y-1">
+                  <Link key={owner} to={`/admin?owner=${encodeURIComponent(owner)}`} className="block space-y-1 rounded-xl p-2 -m-2 hover:bg-zinc-800/50 transition">
                     <div className="flex justify-between text-sm">
-                      <span className="font-medium text-zinc-200">{owner}</span>
+                      <span className="font-medium text-zinc-200 group-hover:text-white">{owner}</span>
                       <span className="text-zinc-400">{d.rows} filas · {d.units} unidades · {formatPrice(d.value)}</span>
                     </div>
                     <div className="h-2 overflow-hidden rounded-full bg-zinc-800">
                       <div className={`h-full ${colors[i % colors.length]} transition-all duration-700`} style={{ width: `${pct}%` }} />
                     </div>
-                  </div>
+                  </Link>
                 )
               })}
             </div>
@@ -175,13 +175,13 @@ export function DashboardPage() {
             <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white"><Shield size={16} className="text-violet-400" /> Por rareza (unidades)</h3>
             <div className="space-y-2">
               {stats.byRarity.map(([rarity, qty]) => (
-                <div key={rarity} className="flex items-center gap-3">
+                <Link key={rarity} to={`/admin?rarity=${encodeURIComponent(rarity)}`} className="flex items-center gap-3 rounded-lg p-1.5 -m-1.5 hover:bg-zinc-800 transition">
                   <span className="w-20 text-xs capitalize text-zinc-400">{rarity}</span>
                   <div className="flex-1 h-2 rounded-full bg-zinc-800 overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-700" style={{ width: `${(qty / maxRarity) * 100}%` }} />
                   </div>
                   <span className="w-12 text-right text-xs font-medium text-white">{qty}</span>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
@@ -191,11 +191,11 @@ export function DashboardPage() {
               {stats.byLang.map(([lang, qty]) => {
                 const pct = Math.round((qty / stats.totalUnits) * 100)
                 return (
-                  <div key={lang} className="flex-1 rounded-xl bg-zinc-800 p-3 text-center">
+                  <Link key={lang} to={`/admin?language=${encodeURIComponent(lang)}`} className="flex-1 rounded-xl bg-zinc-800 p-3 text-center hover:bg-zinc-700 transition hover:scale-[1.02]">
                     <div className="text-lg font-bold text-white">{qty}</div>
                     <div className="text-xs font-medium text-zinc-300">{lang}</div>
                     <div className="text-xs text-zinc-500">{pct}%</div>
-                  </div>
+                  </Link>
                 )
               })}
             </div>
@@ -214,13 +214,13 @@ export function DashboardPage() {
             <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white"><Trophy size={16} className="text-amber-400" /> Top ediciones (filas)</h3>
             <div className="space-y-2">
               {stats.byEdition.map(([ed, cnt]) => (
-                <div key={ed} className="flex items-center gap-3 text-sm">
+                <Link key={ed} to={`/admin?edition=${encodeURIComponent(ed)}`} className="flex items-center gap-3 text-sm rounded-lg p-1.5 -m-1.5 hover:bg-zinc-800 transition">
                   <span className="w-28 truncate text-zinc-300">{ed}</span>
                   <div className="flex-1 h-2 rounded-full bg-zinc-800 overflow-hidden">
                     <div className="h-full bg-amber-500 transition-all duration-700" style={{ width: `${(cnt / maxEdition) * 100}%` }} />
                   </div>
                   <span className="w-8 text-right text-xs text-zinc-400">{cnt}</span>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
@@ -228,9 +228,9 @@ export function DashboardPage() {
             <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white"><Boxes size={16} className="text-teal-400" /> Por tipo / color</h3>
             <div className="flex flex-wrap gap-2">
               {stats.byType.map(([type, qty]) => (
-                <div key={type} className="rounded-full border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs">
+                <Link key={type} to={`/admin?type=${encodeURIComponent(type)}`} className="rounded-full border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs hover:bg-zinc-700 hover:border-zinc-600 transition">
                   <span className="text-zinc-400">{type}</span> <span className="font-bold text-white">{qty}</span>
-                </div>
+                </Link>
               ))}
             </div>
           </div>

@@ -104,6 +104,25 @@ export function AdminPage() {
     setPage(0)
   }, [filters, pageSize, syncFilter, sortBy, sortDir])
 
+  // Inicializa filtros desde query params del dashboard (?owner=Pollo&rarity=rare etc.)
+  useEffect(() => {
+    const owner = searchParams.get('owner')
+    const rarity = searchParams.get('rarity')
+    const language = searchParams.get('language')
+    const edition = searchParams.get('edition')
+    const type = searchParams.get('type')
+    if (owner || rarity || language || edition || type) {
+      setFilters(f => ({
+        ...f,
+        owner: owner ?? f.owner,
+        rarity: rarity ?? f.rarity,
+        language: language ?? f.language,
+        edition: edition ?? f.edition,
+        type: type ?? f.type,
+      }))
+    }
+  }, []) // solo al montar, para links desde dashboard
+
   const handleSort = (field: import('../components/admin/AdminTable').AdminSortField) => {
     if (sortBy === field) setSortDir(d => (d === 'asc' ? 'desc' : 'asc'))
     else {
