@@ -57,7 +57,7 @@ export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId,
               <td className="px-3 py-3">
                 <div className="flex justify-end gap-1">
                   <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onView(c) }} aria-label="Ver detalle" title="Ver detalle" className="h-9 w-9 p-0">
-                    <Eye size={19} />
+                    <Eye size={20} />
                   </Button>
                   <Button
                     variant="ghost"
@@ -68,13 +68,13 @@ export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId,
                     title="Sincronizar con Scryfall"
                     className="h-9 w-9 p-0"
                   >
-                    {syncingId === c.id ? <Loader2 size={19} className="animate-spin" /> : <RefreshCw size={19} />}
+                    {syncingId === c.id ? <Loader2 size={20} className="animate-spin" /> : <RefreshCw size={20} />}
                   </Button>
                   <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(c) }} aria-label="Editar" title="Editar carta" className="h-9 w-9 p-0">
-                    <Pencil size={19} />
+                    <Pencil size={20} />
                   </Button>
                   <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onDelete(c.id) }} aria-label="Eliminar" title="Eliminar carta" className="h-9 w-9 p-0 !text-red-500 hover:!text-red-400 hover:bg-red-950/30">
-                    <Trash2 size={19} />
+                    <Trash2 size={20} />
                   </Button>
                 </div>
               </td>
