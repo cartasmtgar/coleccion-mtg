@@ -56,8 +56,8 @@ export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId,
               <td className="px-3 py-3 text-right text-amber-400">{formatPrice(c.price_usd)}</td>
               <td className="px-3 py-3">
                 <div className="flex justify-end gap-1">
-                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onView(c) }} aria-label="Ver detalle" title="Ver detalle" className="h-9 w-9 p-0">
-                    <Eye size={18} />
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onView(c) }} aria-label="Ver detalle" title="Ver detalle" className="h-10 w-10 p-0">
+                    <Eye size={20} />
                   </Button>
                   <Button
                     variant="ghost"
@@ -66,15 +66,15 @@ export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId,
                     disabled={syncingId === c.id}
                     aria-label={`Sincronizar ${c.name_en ?? c.name_es}`}
                     title="Sincronizar con Scryfall"
-                    className="h-9 w-9 p-0"
+                    className="h-10 w-10 p-0"
                   >
-                    {syncingId === c.id ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}
+                    {syncingId === c.id ? <Loader2 size={20} className="animate-spin" /> : <RefreshCw size={20} />}
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(c) }} aria-label="Editar" title="Editar carta" className="h-9 w-9 p-0">
-                    <Pencil size={18} />
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(c) }} aria-label="Editar" title="Editar carta" className="h-10 w-10 p-0">
+                    <Pencil size={20} />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onDelete(c.id) }} aria-label="Eliminar" title="Eliminar carta" className="h-9 w-9 p-0 text-red-400 hover:text-red-300">
-                    <Trash2 size={18} />
+                  <Button variant="danger" size="sm" onClick={(e) => { e.stopPropagation(); onDelete(c.id) }} aria-label="Eliminar" title="Eliminar carta" className="h-10 w-10 p-0">
+                    <Trash2 size={20} />
                   </Button>
                 </div>
               </td>
