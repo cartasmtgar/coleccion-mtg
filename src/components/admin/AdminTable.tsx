@@ -1,4 +1,4 @@
-import { Pencil, Trash2, RefreshCw, Loader2 } from 'lucide-react'
+import { Pencil, Trash2, RefreshCw, Loader2, Eye } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { formatPrice } from '../../lib/utils'
 import type { Card } from '../../types/card'
@@ -8,10 +8,11 @@ interface Props {
   onEdit: (c: Card) => void
   onDelete: (id: string) => void
   onSync: (c: Card) => void
+  onView: (c: Card) => void
   syncingId: string | null
 }
 
-export function AdminTable({ cards, onEdit, onDelete, onSync, syncingId }: Props) {
+export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId }: Props) {
   if (cards.length === 0) {
     return <p className="py-10 text-center text-zinc-500">Sin cartas. Agrega la primera.</p>
   }
@@ -44,6 +45,9 @@ export function AdminTable({ cards, onEdit, onDelete, onSync, syncingId }: Props
               <td className="px-3 py-3 text-right text-amber-400">{formatPrice(c.price_usd)}</td>
               <td className="px-3 py-3">
                 <div className="flex justify-end gap-1">
+                  <Button variant="ghost" size="sm" onClick={() => onView(c)} aria-label="Ver detalle" title="Ver detalle" className="h-9 w-9 p-0">
+                    <Eye size={18} />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"

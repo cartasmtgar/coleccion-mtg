@@ -5,6 +5,7 @@ import { Button } from '../components/ui/Button'
 import { SearchFilters } from '../components/public/SearchFilters'
 import { AdminTable } from '../components/admin/AdminTable'
 import { CardForm } from '../components/admin/CardForm'
+import { CardDetail } from '../components/public/CardDetail'
 import { Pagination } from '../components/ui/Pagination'
 import { useCards } from '../hooks/useCards'
 import { useAuth } from '../context/AuthContext'
@@ -27,6 +28,8 @@ export function AdminPage() {
   const [syncingId, setSyncingId] = useState<string | null>(null)
   const [syncingAll, setSyncingAll] = useState(false)
   const [syncProgress, setSyncProgress] = useState<{ done: number; total: number } | null>(null)
+  const [detailCard, setDetailCard] = useState<Card | null>(null)
+  const [detailScryfall, setDetailScryfall] = useState<ScryfallCard | null>(null)
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(50)
 
@@ -201,6 +204,19 @@ export function AdminPage() {
     await refresh()
   }
 
+  const handleView = async (card: Card) => {
+    setDetailCard(card)
+    setDetailScryfall(null)
+    if (card.scryfall_id) {
+      try {
+        const sc = await fetchByScryfallId(card.scryfall_id)
+        setDetailScryfall(sc)
+      } catch { /* ignore */ }
+    } else if (card.image_url) {
+      // ya tiene imagen, no necesita fetch extra
+    }
+  }
+
   return (
     <div className="min-h-screen bg-zinc-950">
       <header className="sticky top-0 z-40 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur">
@@ -282,10 +298,11 @@ export function AdminPage() {
         <SearchFilters filters={filters} onChange={(p) => setFilters((f) => ({ ...f, ...p }))} view={catalogView} onViewChange={setCatalogView} editions={editions} owners={owners} />
 
         <Pagination page={page} pageSize={pageSize} total={filtered.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
-        <AdminTable cards={paginated} onEdit={(c) => { setEditing(c); setFormOpen(true) }} onDelete={handleDelete} onSync={handleSync} syncingId={syncingId} />
+        <AdminTable cards={paginated} onEdit={(c) => { setEditing(c); setFormOpen(true) }} onDelete={handleDelete} onSync={handleSync} onView={handleView} syncingId={syncingId} />
         <Pagination page={page} pageSize={pageSize} total={filtered.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
 
         <CardForm open={formOpen} onClose={() => { setFormOpen(false); setEditing(null) }} initial={editing} onSave={handleSave} />
+        <CardDetail card={detailCard} scryfall={detailScryfall} open={!!detailCard} onClose={() => setDetailCard(null)} />
       </main>
     </div>
   )
