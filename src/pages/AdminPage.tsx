@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { LogOut, Plus, RefreshCw, Loader2, Sparkles, ExternalLink, LayoutDashboard } from 'lucide-react'
+import { LogOut, Plus, RefreshCw, Loader2, Sparkles, ExternalLink, LayoutDashboard, AlertTriangle } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { SearchFilters } from '../components/public/SearchFilters'
 import { AdminTable } from '../components/admin/AdminTable'
 import { CardForm } from '../components/admin/CardForm'
 import { CardDetail } from '../components/public/CardDetail'
+import { Modal } from '../components/ui/Modal'
 import { Pagination } from '../components/ui/Pagination'
 import { useCards } from '../hooks/useCards'
 import { useAuth } from '../context/AuthContext'
@@ -30,6 +31,7 @@ export function AdminPage() {
   const [syncProgress, setSyncProgress] = useState<{ done: number; total: number } | null>(null)
   const [detailCard, setDetailCard] = useState<Card | null>(null)
   const [detailScryfall, setDetailScryfall] = useState<ScryfallCard | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Card | null>(null)
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(50)
   const [sortBy, setSortBy] = useState<import('../components/admin/AdminTable').AdminSortField | null>(null)
@@ -227,10 +229,16 @@ export function AdminPage() {
     setEditing(null)
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('¿Eliminar esta carta?')) return
-    await cardsService.deleteCard(id)
+  const handleDelete = (id: string) => {
+    const card = cards.find(c => c.id === id)
+    if (card) setDeleteTarget(card)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return
+    await cardsService.deleteCard(deleteTarget.id)
     await refresh()
+    setDeleteTarget(null)
   }
 
   const handleView = async (card: Card) => {
@@ -332,6 +340,26 @@ export function AdminPage() {
 
         <CardForm open={formOpen} onClose={() => { setFormOpen(false); setEditing(null) }} initial={editing} onSave={handleSave} />
         <CardDetail card={detailCard} scryfall={detailScryfall} open={!!detailCard} onClose={() => setDetailCard(null)} />
+
+        <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Eliminar carta">
+          {deleteTarget && (
+            <div className="space-y-4">
+              <div className="flex gap-3 rounded-xl border border-red-900/40 bg-red-950/30 p-4">
+                <AlertTriangle className="h-5 w-5 shrink-0 text-red-400" />
+                <div className="text-sm">
+                  <p className="font-medium text-white">¿Eliminar "{deleteTarget.name_en ?? deleteTarget.name_es}"?</p>
+                  <p className="mt-1 text-zinc-400">
+                    Edición {deleteTarget.edition ?? '—'} · {deleteTarget.owner ?? '—'} · x{deleteTarget.quantity}. Esta acción no se puede deshacer.
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" onClick={() => setDeleteTarget(null)}>Cancelar</Button>
+                <Button variant="danger" onClick={handleConfirmDelete}>Eliminar</Button>
+              </div>
+            </div>
+          )}
+        </Modal>
       </main>
     </div>
   )
