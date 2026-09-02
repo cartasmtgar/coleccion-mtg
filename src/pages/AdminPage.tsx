@@ -6,6 +6,7 @@ import { SearchFilters } from '../components/public/SearchFilters'
 import { AdminTable } from '../components/admin/AdminTable'
 import { CardForm } from '../components/admin/CardForm'
 import { CardDetail } from '../components/public/CardDetail'
+import { CardGrid } from '../components/public/CardGrid'
 import { Modal } from '../components/ui/Modal'
 import { Pagination } from '../components/ui/Pagination'
 import { useCards } from '../hooks/useCards'
@@ -22,7 +23,7 @@ export function AdminPage() {
   const { signOut, user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const syncFilter = searchParams.get('sync') as 'synced' | 'pending' | null
-  const [catalogView, setCatalogView] = useState<CatalogView>('grid')
+  const [catalogView, setCatalogView] = useState<CatalogView>('table')
   const [filters, setFilters] = useState<CardFilters>(DEFAULT_FILTERS)
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Card | null>(null)
@@ -338,7 +339,11 @@ export function AdminPage() {
         <SearchFilters filters={filters} onChange={(p) => setFilters((f) => ({ ...f, ...p }))} view={catalogView} onViewChange={setCatalogView} editions={editions} owners={owners} />
 
         <Pagination page={page} pageSize={pageSize} total={filtered.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
-        <AdminTable cards={paginated} onEdit={(c) => { setEditing(c); setFormOpen(true) }} onDelete={handleDelete} onSync={handleSync} onView={handleView} syncingId={syncingId} sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+        {catalogView === 'grid' ? (
+          <CardGrid cards={paginated} onSelect={handleView} />
+        ) : (
+          <AdminTable cards={paginated} onEdit={(c) => { setEditing(c); setFormOpen(true) }} onDelete={handleDelete} onSync={handleSync} onView={handleView} syncingId={syncingId} sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+        )}
         <Pagination page={page} pageSize={pageSize} total={filtered.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
 
         <CardForm open={formOpen} onClose={() => { setFormOpen(false); setEditing(null) }} initial={editing} onSave={handleSave} />
