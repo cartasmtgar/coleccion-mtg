@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { LogOut, Plus, RefreshCw, Loader2, Sparkles, ExternalLink, LayoutDashboard } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { SearchFilters } from '../components/public/SearchFilters'
@@ -18,6 +18,8 @@ import * as cardsService from '../services/cards.service'
 export function AdminPage() {
   const { cards, refresh } = useCards()
   const { signOut, user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const syncFilter = searchParams.get('sync') as 'synced' | 'pending' | null
   const [catalogView, setCatalogView] = useState<CatalogView>('grid')
   const [filters, setFilters] = useState<CardFilters>(DEFAULT_FILTERS)
   const [formOpen, setFormOpen] = useState(false)
@@ -33,6 +35,8 @@ export function AdminPage() {
 
   const filtered = useMemo(() => {
     return cards.filter((c) => {
+      if (syncFilter === 'synced' && !(c.image_url || c.scryfall_id)) return false
+      if (syncFilter === 'pending' && (c.image_url || c.scryfall_id)) return false
       if (filters.search) {
         const q = filters.search.toLowerCase()
         const hay = `${c.name_es} ${c.name_en ?? ''} ${c.type ?? ''}`.toLowerCase()
@@ -46,7 +50,7 @@ export function AdminPage() {
       if (filters.type && c.type && !c.type.toLowerCase().includes(filters.type.toLowerCase())) return false
       return true
     })
-  }, [cards, filters])
+  }, [cards, filters, syncFilter])
 
   const paginated = useMemo(() => {
     const start = page * pageSize
@@ -55,7 +59,7 @@ export function AdminPage() {
 
   useEffect(() => {
     setPage(0)
-  }, [filters, pageSize])
+  }, [filters, pageSize, syncFilter])
 
   const handleSync = async (card: Card) => {
     setSyncingId(card.id)
@@ -246,6 +250,33 @@ export function AdminPage() {
               </div>
             )}
           </div>
+        </div>
+
+        {syncFilter && (
+          <div className="flex items-center gap-2 rounded-xl border border-amber-700/30 bg-amber-950/20 px-3 py-2 text-sm">
+            <span className="text-amber-300">
+              Filtrado por: {syncFilter === 'synced' ? 'con imagen' : 'pendientes'} ({filtered.length})
+            </span>
+            <button onClick={() => setSearchParams({})} className="ml-auto text-xs text-zinc-400 hover:text-white underline">
+              Limpiar filtro
+            </button>
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-2">
+          <span className="text-xs text-zinc-500 pt-1">Filtrar sincronización:</span>
+          <button
+            onClick={() => setSearchParams(syncFilter === 'synced' ? {} : { sync: 'synced' })}
+            className={`rounded-full px-3 py-1 text-xs font-medium border ${syncFilter === 'synced' ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'}`}
+          >
+            Con imagen
+          </button>
+          <button
+            onClick={() => setSearchParams(syncFilter === 'pending' ? {} : { sync: 'pending' })}
+            className={`rounded-full px-3 py-1 text-xs font-medium border ${syncFilter === 'pending' ? 'bg-amber-600 text-white border-amber-500' : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'}`}
+          >
+            Pendientes
+          </button>
         </div>
 
         <SearchFilters filters={filters} onChange={(p) => setFilters((f) => ({ ...f, ...p }))} view={catalogView} onViewChange={setCatalogView} editions={editions} owners={owners} />

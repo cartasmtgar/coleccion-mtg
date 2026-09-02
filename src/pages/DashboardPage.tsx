@@ -161,11 +161,11 @@ export function DashboardPage() {
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
-              <div className="rounded-lg bg-zinc-800 py-2"><div className="font-bold text-white">{stats.synced}</div><div className="text-zinc-500">con imagen</div></div>
-              <div className="rounded-lg bg-zinc-800 py-2"><div className="font-bold text-amber-400">{stats.totalUnique - stats.synced}</div><div className="text-zinc-500">pendientes</div></div>
-              <div className="rounded-lg bg-zinc-800 py-2"><div className="font-bold text-white">{stats.uniqueGoldfish}</div><div className="text-zinc-500">variantes</div></div>
+              <Link to="/admin?sync=synced" className="rounded-lg bg-zinc-800 py-2 hover:bg-zinc-700 transition hover:scale-[1.02]"><div className="font-bold text-white">{stats.synced}</div><div className="text-zinc-500">con imagen</div></Link>
+              <Link to="/admin?sync=pending" className="rounded-lg bg-zinc-800 py-2 hover:bg-zinc-700 transition hover:scale-[1.02]"><div className="font-bold text-amber-400">{stats.totalUnique - stats.synced}</div><div className="text-zinc-500">pendientes</div></Link>
+              <div className="rounded-lg bg-zinc-800 py-2" title="Variantes = cartas distintas por goldfish_url (misma carta en distinto dueño/idioma cuenta como 1 variante). Total filas 2201 incluye duplicados por owner."><div className="font-bold text-white">{stats.uniqueGoldfish}</div><div className="text-zinc-500">variantes</div></div>
             </div>
-            <Link to="/admin" className="mt-4 block text-center text-xs text-amber-400 hover:underline">Ir a sincronizar →</Link>
+            <Link to="/admin?sync=pending" className="mt-4 block text-center text-xs text-amber-400 hover:underline">Ver pendientes para sincronizar →</Link>
           </div>
         </div>
 
