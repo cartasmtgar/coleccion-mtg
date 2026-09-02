@@ -32,6 +32,8 @@ export function AdminPage() {
   const [detailScryfall, setDetailScryfall] = useState<ScryfallCard | null>(null)
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(50)
+  const [sortBy, setSortBy] = useState<import('../components/admin/AdminTable').AdminSortField | null>(null)
+  const [sortDir, setSortDir] = useState<import('../components/admin/AdminTable').SortDir>('asc')
 
   const editions = useMemo(() => [...new Set(cards.map((c) => c.edition).filter(Boolean) as string[])].sort(), [cards])
   const owners = useMemo(() => [...new Set(cards.map((c) => c.owner).filter(Boolean) as string[])].sort(), [cards])
@@ -55,14 +57,60 @@ export function AdminPage() {
     })
   }, [cards, filters, syncFilter])
 
+  const sorted = useMemo(() => {
+    if (!sortBy) return filtered
+    const dir = sortDir === 'asc' ? 1 : -1
+    return [...filtered].sort((a, b) => {
+      let av: string | number = ''
+      let bv: string | number = ''
+      switch (sortBy) {
+        case 'name':
+          av = (a.name_en ?? a.name_es).toLowerCase()
+          bv = (b.name_en ?? b.name_es).toLowerCase()
+          break
+        case 'edition':
+          av = (a.edition ?? '').toLowerCase()
+          bv = (b.edition ?? '').toLowerCase()
+          break
+        case 'owner':
+          av = (a.owner ?? '').toLowerCase()
+          bv = (b.owner ?? '').toLowerCase()
+          break
+        case 'condition':
+          av = (a.condition ?? '').toLowerCase()
+          bv = (b.condition ?? '').toLowerCase()
+          break
+        case 'quantity':
+          av = a.quantity
+          bv = b.quantity
+          break
+        case 'price':
+          av = a.price_usd ?? -1
+          bv = b.price_usd ?? -1
+          break
+      }
+      if (av < bv) return -1 * dir
+      if (av > bv) return 1 * dir
+      return 0
+    })
+  }, [filtered, sortBy, sortDir])
+
   const paginated = useMemo(() => {
     const start = page * pageSize
-    return filtered.slice(start, start + pageSize)
-  }, [filtered, page, pageSize])
+    return sorted.slice(start, start + pageSize)
+  }, [sorted, page, pageSize])
 
   useEffect(() => {
     setPage(0)
-  }, [filters, pageSize, syncFilter])
+  }, [filters, pageSize, syncFilter, sortBy, sortDir])
+
+  const handleSort = (field: import('../components/admin/AdminTable').AdminSortField) => {
+    if (sortBy === field) setSortDir(d => (d === 'asc' ? 'desc' : 'asc'))
+    else {
+      setSortBy(field)
+      setSortDir('asc')
+    }
+  }
 
   const handleSync = async (card: Card) => {
     setSyncingId(card.id)
@@ -260,7 +308,7 @@ export function AdminPage() {
         <SearchFilters filters={filters} onChange={(p) => setFilters((f) => ({ ...f, ...p }))} view={catalogView} onViewChange={setCatalogView} editions={editions} owners={owners} />
 
         <Pagination page={page} pageSize={pageSize} total={filtered.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
-        <AdminTable cards={paginated} onEdit={(c) => { setEditing(c); setFormOpen(true) }} onDelete={handleDelete} onSync={handleSync} onView={handleView} syncingId={syncingId} />
+        <AdminTable cards={paginated} onEdit={(c) => { setEditing(c); setFormOpen(true) }} onDelete={handleDelete} onSync={handleSync} onView={handleView} syncingId={syncingId} sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
         <Pagination page={page} pageSize={pageSize} total={filtered.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
 
         <CardForm open={formOpen} onClose={() => { setFormOpen(false); setEditing(null) }} initial={editing} onSave={handleSave} />

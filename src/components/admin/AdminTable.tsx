@@ -1,7 +1,10 @@
-import { Pencil, Trash2, RefreshCw, Loader2, Eye } from 'lucide-react'
+import { Pencil, Trash2, RefreshCw, Loader2, Eye, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { formatPrice } from '../../lib/utils'
 import type { Card } from '../../types/card'
+
+export type AdminSortField = 'name' | 'edition' | 'owner' | 'condition' | 'quantity' | 'price'
+export type SortDir = 'asc' | 'desc'
 
 interface Props {
   cards: Card[]
@@ -10,9 +13,17 @@ interface Props {
   onSync: (c: Card) => void
   onView: (c: Card) => void
   syncingId: string | null
+  sortBy: AdminSortField | null
+  sortDir: SortDir
+  onSort: (field: AdminSortField) => void
 }
 
-export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId }: Props) {
+export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId, sortBy, sortDir, onSort }: Props) {
+  const SortIcon = ({ field }: { field: AdminSortField }) => {
+    if (sortBy !== field) return <ArrowUpDown size={14} className="opacity-40" />
+    return sortDir === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />
+  }
+  const thCls = 'px-3 py-3 cursor-pointer select-none hover:text-white transition inline-flex items-center gap-1'
   if (cards.length === 0) {
     return <p className="py-10 text-center text-zinc-500">Sin cartas. Agrega la primera.</p>
   }
@@ -22,12 +33,12 @@ export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId 
       <table className="w-full text-left text-sm">
         <thead className="bg-zinc-900 text-xs uppercase text-zinc-400">
           <tr>
-            <th className="px-3 py-3">Nombre</th>
-            <th className="px-3 py-3">Edición</th>
-            <th className="px-3 py-3">Dueño</th>
-            <th className="px-3 py-3">Cond.</th>
-            <th className="px-3 py-3">Cant.</th>
-            <th className="px-3 py-3 text-right">Precio</th>
+            <th className="px-3 py-3"><button onClick={() => onSort('name')} className={thCls}>Nombre <SortIcon field="name" /></button></th>
+            <th className="px-3 py-3"><button onClick={() => onSort('edition')} className={thCls}>Edición <SortIcon field="edition" /></button></th>
+            <th className="px-3 py-3"><button onClick={() => onSort('owner')} className={thCls}>Dueño <SortIcon field="owner" /></button></th>
+            <th className="px-3 py-3"><button onClick={() => onSort('condition')} className={thCls}>Cond. <SortIcon field="condition" /></button></th>
+            <th className="px-3 py-3"><button onClick={() => onSort('quantity')} className={thCls}>Cant. <SortIcon field="quantity" /></button></th>
+            <th className="px-3 py-3 text-right"><button onClick={() => onSort('price')} className={`${thCls} ml-auto`}>Precio <SortIcon field="price" /></button></th>
             <th className="px-3 py-3 text-right">Acciones</th>
           </tr>
         </thead>
