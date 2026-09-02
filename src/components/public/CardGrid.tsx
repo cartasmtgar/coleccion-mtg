@@ -1,7 +1,6 @@
 import { Badge } from '../ui/Badge'
 import { formatPrice } from '../../lib/utils'
 import type { Card } from '../../types/card'
-import { RARITY_LABELS } from '../../types/card'
 
 type AggregatedCard = Card & { _total?: number; _langs?: Record<string, number> }
 
@@ -39,7 +38,7 @@ export function CardGrid({ cards, onSelect }: { cards: (Card & { _total?: number
             <div className="flex flex-wrap gap-1.5">
               {card.rarity && (
                 <Badge variant={card.rarity === 'mythic' ? 'mythic' : card.rarity === 'rare' ? 'rare' : 'default'}>
-                  {RARITY_LABELS[card.rarity] ?? card.rarity}
+                  {card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1)}
                 </Badge>
               )}
               {card.edition && <Badge variant="outline">{card.edition}</Badge>}
@@ -54,7 +53,7 @@ export function CardGrid({ cards, onSelect }: { cards: (Card & { _total?: number
               <span>
                 {(card as AggregatedCard)._total ? `Total x${(card as AggregatedCard)._total}` : `x${card.quantity}`}{card.condition ? ` · ${card.condition}` : ''}
               </span>
-              <span className="font-semibold text-amber-400">{formatPrice(card.price_usd)}</span>
+              <span className="font-semibold text-amber-400">Precio u. {formatPrice(card.price_usd)}</span>
             </div>
           </div>
         </article>

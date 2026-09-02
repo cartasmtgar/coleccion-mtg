@@ -16,7 +16,7 @@ export function CardTable({ cards, onSelect }: { cards: (Card & { _total?: numbe
             <th className="px-4 py-3">Idioma</th>
             <th className="px-4 py-3">Cond.</th>
             <th className="px-4 py-3">Cant.</th>
-            <th className="px-4 py-3 text-right">Precio</th>
+            <th className="px-4 py-3 text-right">Precio u.</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-800 bg-zinc-950">
@@ -31,7 +31,7 @@ export function CardTable({ cards, onSelect }: { cards: (Card & { _total?: numbe
                 {c.name_es && c.name_en && c.name_en !== c.name_es && <div className="text-xs text-zinc-500">{c.name_es}</div>}
               </td>
               <td className="px-4 py-3 text-zinc-300">{c.edition ?? '—'}</td>
-              <td className="px-4 py-3 text-zinc-300">{c.rarity ?? '—'}</td>
+              <td className="px-4 py-3 text-zinc-300">{c.rarity ? c.rarity.charAt(0).toUpperCase() + c.rarity.slice(1) : '—'}</td>
               <td className="px-4 py-3 text-zinc-300">
                 {c.language}
                 {(c as unknown as { _langs?: Record<string, number> })._langs && Object.keys((c as unknown as { _langs?: Record<string, number> })._langs!).length > 1

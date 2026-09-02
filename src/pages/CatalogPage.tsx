@@ -118,8 +118,8 @@ export function CatalogPage() {
           <div className="space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-2xl font-bold text-white">Catálogo Público</h2>
-                <p className="text-sm text-zinc-500">{grouped.length} cartas únicas · {filtered.reduce((a,c)=>a+c.quantity,0)} unidades totales · Solo exhibición y cotización</p>
+                <h2 className="text-2xl font-bold text-white">Catálogo</h2>
+                <p className="text-sm text-zinc-500">{grouped.length} cartas únicas · {filtered.reduce((a,c)=>a+c.quantity,0)} unidades totales</p>
               </div>
               <Button variant="outline" size="sm" onClick={() => setContactOpen(true)}>
                 <Mail size={14} /> Cotizar cartas
