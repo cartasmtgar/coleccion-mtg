@@ -1,4 +1,5 @@
 import type { Card } from '../types/card'
+import { getEditionOrder } from './sets'
 
 export type SortDir = 'asc' | 'desc'
 export interface SortRule<F extends string = string> {
@@ -28,8 +29,8 @@ export function compareCard(a: Card, b: Card, field: string): number {
       bv = ((b.name_en ?? b.name_es) as string).toLowerCase()
       break
     case 'edition':
-      av = ((a.edition ?? '') as string).toLowerCase()
-      bv = ((b.edition ?? '') as string).toLowerCase()
+      av = getEditionOrder(a.edition)
+      bv = getEditionOrder(b.edition)
       break
     case 'rarity':
       av = RARITY_ORDER[(a.rarity ?? '') as string] ?? 99
