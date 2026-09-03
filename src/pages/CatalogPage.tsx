@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Mail, Sparkles, X, ArrowUp, ArrowDown } from 'lucide-react'
+import { Mail, Sparkles, X, ArrowUp, ArrowDown, GripVertical } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { SearchFilters } from '../components/public/SearchFilters'
 import { CardGrid } from '../components/public/CardGrid'
@@ -176,8 +176,28 @@ export function CatalogPage() {
               <div className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 px-2 py-2">
                 <span className="text-xs font-medium text-zinc-400">Ordenar por (máx 3):</span>
                 {sortRules.map((r, idx) => (
-                  <div key={r.field} className="flex items-center gap-1 rounded-lg border border-zinc-700 bg-zinc-800 px-1.5 py-1 animate-in slide-in-from-left-2 duration-200">
-                    <span className="text-xs font-bold text-amber-400">{idx + 1}</span>
+                  <div
+                    key={r.field}
+                    draggable={sortRules.length > 1}
+                    onDragStart={e => { if (sortRules.length <= 1) { e.preventDefault(); return } e.dataTransfer.setData('text/plain', String(idx)); e.dataTransfer.effectAllowed = 'move' }}
+                    onDragOver={e => e.preventDefault()}
+                    onDrop={e => {
+                      e.preventDefault()
+                      const from = Number(e.dataTransfer.getData('text/plain'))
+                      if (Number.isNaN(from) || from === idx) return
+                      const copy = [...sortRules]
+                      const [moved] = copy.splice(from, 1)
+                      copy.splice(idx, 0, moved)
+                      setSortRules(copy)
+                    }}
+                    className="flex items-center gap-1 rounded-lg border border-zinc-700 bg-zinc-800 px-1.5 py-1"
+                  >
+                    <span
+                      className={`flex h-6 w-5 items-center justify-center rounded-md ${sortRules.length > 1 ? 'cursor-grab active:cursor-grabbing text-zinc-500 hover:text-zinc-300' : 'cursor-not-allowed text-zinc-600 opacity-40'}`}
+                      title={sortRules.length > 1 ? 'Arrastrar para reordenar' : 'Añade otro orden para reordenar'}
+                    >
+                      <GripVertical size={12} />
+                    </span>
                     <Select value={r.field} onChange={e => { const v = e.target.value as CatalogSortField; const copy = [...sortRules]; copy[idx] = { field: v, dir: r.dir }; setSortRules(copy) }} className="w-20 py-1 text-xs border-0 bg-transparent p-0">
                       <option value="name">Nombre</option>
                       <option value="edition">Edición</option>
@@ -188,8 +208,8 @@ export function CatalogPage() {
                       <option value="price">Precio u.</option>
                     </Select>
                     <div className="flex min-w-[56px] shrink-0 overflow-hidden rounded-md border border-zinc-700">
-                      <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'asc'))} className={`flex-1 flex items-center justify-center p-1 transition-colors duration-150 ${r.dir === 'asc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`} aria-label="Ascendente"><ArrowUp size={12} className="shrink-0" /></button>
-                      <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'desc'))} className={`flex-1 flex items-center justify-center p-1 transition-colors duration-150 ${r.dir === 'desc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`} aria-label="Descendente"><ArrowDown size={12} className="shrink-0" /></button>
+                      <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'asc'))} className={`flex-1 flex items-center justify-center p-1 ${r.dir === 'asc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`} aria-label="Ascendente"><ArrowUp size={12} className="shrink-0" /></button>
+                      <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'desc'))} className={`flex-1 flex items-center justify-center p-1 ${r.dir === 'desc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`} aria-label="Descendente"><ArrowDown size={12} className="shrink-0" /></button>
                     </div>
                     <button onClick={() => setSortRules(removeRule(sortRules, r.field))} className="ml-1 text-zinc-500 hover:text-white"><X size={12} /></button>
                   </div>
