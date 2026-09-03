@@ -336,9 +336,9 @@ export function AdminPage() {
                   <option value="quantity">Cantidad</option>
                   <option value="price">Precio u.</option>
                 </Select>
-                <div className="flex min-w-[64px] overflow-hidden rounded-md border border-zinc-700">
-                  <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'asc'))} className={`flex-1 px-2.5 py-1.5 flex items-center justify-center ${r.dir === 'asc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`} aria-label="Ascendente"><ArrowUp size={14} className="shrink-0" /></button>
-                  <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'desc'))} className={`flex-1 px-2.5 py-1.5 flex items-center justify-center ${r.dir === 'desc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`} aria-label="Descendente"><ArrowDown size={14} className="shrink-0" /></button>
+                <div className="flex min-w-[72px] shrink-0 overflow-hidden rounded-md border border-zinc-700">
+                  <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'asc'))} className={`flex-1 flex items-center justify-center p-1.5 ${r.dir === 'asc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`} aria-label="Ascendente"><ArrowUp size={14} className="shrink-0" /></button>
+                  <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'desc'))} className={`flex-1 flex items-center justify-center p-1.5 ${r.dir === 'desc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`} aria-label="Descendente"><ArrowDown size={14} className="shrink-0" /></button>
                 </div>
                 <button onClick={() => setSortRules(removeRule(sortRules, r.field))} className="ml-1 text-zinc-500 hover:text-white"><X size={14} /></button>
               </div>
