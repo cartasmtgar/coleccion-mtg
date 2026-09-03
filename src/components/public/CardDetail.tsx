@@ -28,7 +28,7 @@ export function CardDetail({
         <div>
           <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
             {image ? (
-              <img src={image} alt={card.name_en ?? card.name_es} className="w-full scale-[1.02] object-cover" />
+              <img src={image} alt={card.name_en ?? card.name_es} className="w-full scale-[1.03] object-cover" />
             ) : (
               <div className="flex aspect-[2.5/3.5] items-center justify-center text-sm text-zinc-500">
                 Sin imagen
