@@ -19,11 +19,21 @@ const SET_MAP: Record<string, string> = {
   'homelands': 'hml',
   'fallen empires': 'fem',
   'fallenempires': 'fem',
+  'tempest': 'tmp',
+  'revised': '3ed',
+  'revised edition': '3ed',
   'all': 'all',
   'ice': 'ice',
   'mir': 'mir',
   '4ed': '4ed',
   '5ed': '5ed',
+  '3ed': '3ed',
+  'tmp': 'tmp',
+  'chr': 'chr',
+  'vis': 'vis',
+  'hml': 'hml',
+  'fem': 'fem',
+  'wth': 'wth',
 }
 
 export function editionToSetCode(edition: string | null | undefined): string | null {
