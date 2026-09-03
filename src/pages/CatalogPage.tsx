@@ -176,7 +176,7 @@ export function CatalogPage() {
               <div className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2.5">
                 <span className="text-xs font-medium text-zinc-400">Ordenar por (máx 3):</span>
                 {sortRules.map((r, idx) => (
-                  <div key={r.field} className="flex items-center gap-1 rounded-full border border-zinc-700 bg-zinc-800 px-2 py-1">
+                  <div key={r.field} className="flex items-center gap-1 rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1">
                     <span className="text-xs font-bold text-amber-400">{idx + 1}</span>
                     <Select value={r.field} onChange={e => { const v = e.target.value as CatalogSortField; const copy = [...sortRules]; copy[idx] = { field: v, dir: r.dir }; setSortRules(copy) }} className="w-28 py-1 text-xs border-0 bg-transparent p-0">
                       <option value="name">Nombre</option>
@@ -187,7 +187,7 @@ export function CatalogPage() {
                       <option value="quantity">Cantidad</option>
                       <option value="price">Precio u.</option>
                     </Select>
-                    <div className="flex overflow-hidden rounded-full border border-zinc-700">
+                    <div className="flex overflow-hidden rounded-md border border-zinc-700">
                       <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'asc'))} className={`px-2 py-1 text-xs ${r.dir === 'asc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400'}`}>↑</button>
                       <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'desc'))} className={`px-2 py-1 text-xs ${r.dir === 'desc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400'}`}>↓</button>
                     </div>
