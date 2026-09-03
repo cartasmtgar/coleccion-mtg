@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Mail, Sparkles, X } from 'lucide-react'
+import { Mail, Sparkles, X, ArrowUp, ArrowDown } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { SearchFilters } from '../components/public/SearchFilters'
 import { CardGrid } from '../components/public/CardGrid'
@@ -188,8 +188,8 @@ export function CatalogPage() {
                       <option value="price">Precio u.</option>
                     </Select>
                     <div className="flex overflow-hidden rounded-md border border-zinc-700">
-                      <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'asc'))} className={`px-2 py-1 text-xs ${r.dir === 'asc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400'}`}>↑</button>
-                      <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'desc'))} className={`px-2 py-1 text-xs ${r.dir === 'desc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400'}`}>↓</button>
+                      <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'asc'))} className={`p-1.5 ${r.dir === 'asc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`} aria-label="Ascendente"><ArrowUp size={14} /></button>
+                      <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'desc'))} className={`p-1.5 ${r.dir === 'desc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`} aria-label="Descendente"><ArrowDown size={14} /></button>
                     </div>
                     <button onClick={() => setSortRules(removeRule(sortRules, r.field))} className="ml-1 text-zinc-500 hover:text-white"><X size={14} /></button>
                   </div>
