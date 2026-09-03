@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Mail, Sparkles, ArrowUp, ArrowDown } from 'lucide-react'
+import { Mail, Sparkles, X } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { SearchFilters } from '../components/public/SearchFilters'
 import { CardGrid } from '../components/public/CardGrid'
-import { CardTable, type CatalogSortField, type CatalogSortDir } from '../components/public/CardTable'
+import { CardTable, type CatalogSortField } from '../components/public/CardTable'
 import { CardDetail } from '../components/public/CardDetail'
 import { ContactModal } from '../components/public/ContactModal'
 import { Pagination } from '../components/ui/Pagination'
@@ -14,6 +14,7 @@ import type { Card } from '../types/card'
 import type { ScryfallCard } from '../types/scryfall'
 import { fetchByScryfallId } from '../services/scryfall'
 import { isSupabaseConfigured } from '../lib/supabase'
+import { applySort, removeRule, toggleDir, upsertRule, type SortRule } from '../lib/sort'
 
 export function CatalogPage() {
   const { cards, loading, error } = useCards()
@@ -24,8 +25,14 @@ export function CatalogPage() {
   const [detailScryfall, setDetailScryfall] = useState<ScryfallCard | null>(null)
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(50)
-  const [sortBy, setSortBy] = useState<CatalogSortField | null>(null)
-  const [sortDir, setSortDir] = useState<CatalogSortDir>('asc')
+  const [sortRules, setSortRules] = useState<SortRule<CatalogSortField>[]>(() => {
+    try {
+      const raw = localStorage.getItem('catalog:sort')
+      return raw ? (JSON.parse(raw) as SortRule<CatalogSortField>[]) : []
+    } catch {
+      return []
+    }
+  })
 
   const editions = useMemo(() => [...new Set(cards.map((c) => c.edition).filter(Boolean) as string[])].sort(), [cards])
   const owners = useMemo(() => [...new Set(cards.map((c) => c.owner).filter(Boolean) as string[])].sort(), [cards])
@@ -65,48 +72,7 @@ export function CatalogPage() {
     return [...map.values()].map(v => ({ ...v.rep, quantity: v.total, _total: v.total, _langs: v.langs } as Card & { _total: number; _langs: Record<string, number> }))
   }, [filtered])
 
-  const sorted = useMemo(() => {
-    if (!sortBy) return grouped
-    const dir = sortDir === 'asc' ? 1 : -1
-    const rarityOrder: Record<string, number> = { common: 1, uncommon: 2, rare: 3, mythic: 4, special: 5, bonus: 6, basic: 7 }
-    return [...grouped].sort((a, b) => {
-      let av: string | number = ''
-      let bv: string | number = ''
-      switch (sortBy) {
-        case 'name':
-          av = (a.name_en ?? a.name_es).toLowerCase()
-          bv = (b.name_en ?? b.name_es).toLowerCase()
-          break
-        case 'edition':
-          av = (a.edition ?? '').toLowerCase()
-          bv = (b.edition ?? '').toLowerCase()
-          break
-        case 'rarity':
-          av = rarityOrder[a.rarity ?? ''] ?? 99
-          bv = rarityOrder[b.rarity ?? ''] ?? 99
-          break
-        case 'language':
-          av = (a.language ?? '').toLowerCase()
-          bv = (b.language ?? '').toLowerCase()
-          break
-        case 'condition':
-          av = (a.condition ?? '').toLowerCase()
-          bv = (b.condition ?? '').toLowerCase()
-          break
-        case 'quantity':
-          av = (a as unknown as { _total?: number })._total ?? a.quantity
-          bv = (b as unknown as { _total?: number })._total ?? b.quantity
-          break
-        case 'price':
-          av = a.price_usd ?? -1
-          bv = b.price_usd ?? -1
-          break
-      }
-      if (av < bv) return -1 * dir
-      if (av > bv) return 1 * dir
-      return 0
-    })
-  }, [grouped, sortBy, sortDir])
+  const sorted = useMemo(() => applySort(grouped as unknown as import('../types/card').Card[], sortRules as SortRule[]) as typeof grouped, [grouped, sortRules])
 
   const paginated = useMemo(() => {
     const start = page * pageSize
@@ -115,14 +81,28 @@ export function CatalogPage() {
 
   useEffect(() => {
     setPage(0)
-  }, [filters, pageSize, sortBy, sortDir])
+  }, [filters, pageSize, sortRules])
 
-  const handleSort = (field: CatalogSortField) => {
-    if (sortBy === field) setSortDir(d => (d === 'asc' ? 'desc' : 'asc'))
-    else {
-      setSortBy(field)
-      setSortDir('asc')
-    }
+  useEffect(() => {
+    try {
+      localStorage.setItem('catalog:sort', JSON.stringify(sortRules))
+    } catch {}
+  }, [sortRules])
+
+  const handleSort = (field: CatalogSortField, e?: React.MouseEvent) => {
+    // Shift+click añade, click normal reemplaza (manteniendo compatibilidad)
+    const isMulti = e?.shiftKey
+    if (isMulti) setSortRules(r => upsertRule(r, field))
+    else setSortRules(r => {
+      const existing = r.find(x => x.field === field)
+      if (existing) return [{ field, dir: existing.dir === 'asc' ? 'desc' : 'asc' }]
+      return [{ field, dir: 'asc' }]
+    })
+  }
+
+  const handleAddRule = (field: CatalogSortField) => {
+    if (!field) return
+    setSortRules(r => (r.find(x => x.field === field) ? r : [...r, { field, dir: 'asc' as const }].slice(0, 3)))
   }
 
   const handleSelect = async (card: Card) => {
@@ -194,21 +174,43 @@ export function CatalogPage() {
 
             {catalogView === 'grid' && (
               <div className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2.5">
-                <span className="text-xs font-medium text-zinc-400">Ordenar por:</span>
-                <Select value={sortBy ?? ''} onChange={e => { const v = e.target.value as CatalogSortField; if (v) handleSort(v); else setSortBy(null) }} className="w-36 py-1.5 text-xs">
-                  <option value="">Por defecto</option>
-                  <option value="name">Nombre</option>
-                  <option value="edition">Edición</option>
-                  <option value="rarity">Rareza</option>
-                  <option value="language">Idioma</option>
-                  <option value="condition">Condición</option>
-                  <option value="quantity">Cantidad</option>
-                  <option value="price">Precio u.</option>
-                </Select>
-                <button onClick={() => setSortDir(d => d === 'asc' ? 'desc' : 'asc')} className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700" aria-label="Cambiar orden">
-                  {sortDir === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
-                </button>
-                {sortBy && <span className="text-xs capitalize text-zinc-500">{sortBy} {sortDir === 'asc' ? '↑' : '↓'}</span>}
+                <span className="text-xs font-medium text-zinc-400">Ordenar por (máx 3):</span>
+                {sortRules.map((r, idx) => (
+                  <div key={r.field} className="flex items-center gap-1 rounded-full border border-zinc-700 bg-zinc-800 px-2 py-1">
+                    <span className="text-xs font-bold text-amber-400">{idx + 1}</span>
+                    <Select value={r.field} onChange={e => { const v = e.target.value as CatalogSortField; const copy = [...sortRules]; copy[idx] = { field: v, dir: r.dir }; setSortRules(copy) }} className="w-28 py-1 text-xs border-0 bg-transparent p-0">
+                      <option value="name">Nombre</option>
+                      <option value="edition">Edición</option>
+                      <option value="rarity">Rareza</option>
+                      <option value="language">Idioma</option>
+                      <option value="condition">Condición</option>
+                      <option value="quantity">Cantidad</option>
+                      <option value="price">Precio u.</option>
+                    </Select>
+                    <div className="flex overflow-hidden rounded-full border border-zinc-700">
+                      <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'asc'))} className={`px-2 py-1 text-xs ${r.dir === 'asc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400'}`}>↑</button>
+                      <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'desc'))} className={`px-2 py-1 text-xs ${r.dir === 'desc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400'}`}>↓</button>
+                    </div>
+                    <button onClick={() => setSortRules(removeRule(sortRules, r.field))} className="ml-1 text-zinc-500 hover:text-white"><X size={14} /></button>
+                  </div>
+                ))}
+                {sortRules.length < 3 && (
+                  <div className="flex items-center gap-1">
+                    <Select value="" onChange={e => { const v = e.target.value as CatalogSortField; if (v) handleAddRule(v) }} className="w-32 py-1.5 text-xs">
+                      <option value="">+ Añadir</option>
+                      <option value="name">Nombre</option>
+                      <option value="edition">Edición</option>
+                      <option value="rarity">Rareza</option>
+                      <option value="language">Idioma</option>
+                      <option value="condition">Condición</option>
+                      <option value="quantity">Cantidad</option>
+                      <option value="price">Precio u.</option>
+                    </Select>
+                  </div>
+                )}
+                {sortRules.length > 0 && (
+                  <button onClick={() => setSortRules([])} className="text-xs text-zinc-500 hover:text-white underline">Limpiar</button>
+                )}
               </div>
             )}
 
@@ -216,7 +218,7 @@ export function CatalogPage() {
             {catalogView === 'grid' ? (
               <CardGrid cards={paginated} onSelect={handleSelect} />
             ) : (
-              <CardTable cards={paginated} onSelect={handleSelect} sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+              <CardTable cards={paginated} onSelect={handleSelect} sortRules={sortRules} onSort={handleSort} />
             )}
             <Pagination page={page} pageSize={pageSize} total={sorted.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
           </div>

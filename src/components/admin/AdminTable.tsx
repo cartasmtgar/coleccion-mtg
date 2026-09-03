@@ -2,6 +2,7 @@ import { Pencil, Trash2, RefreshCw, Loader2, Eye, ArrowUp, ArrowDown, ArrowUpDow
 import { Button } from '../ui/Button'
 import { formatPrice } from '../../lib/utils'
 import type { Card } from '../../types/card'
+import type { SortRule } from '../../lib/sort'
 
 export type AdminSortField = 'name' | 'edition' | 'owner' | 'condition' | 'quantity' | 'price'
 export type SortDir = 'asc' | 'desc'
@@ -13,15 +14,22 @@ interface Props {
   onSync: (c: Card) => void
   onView: (c: Card) => void
   syncingId: string | null
-  sortBy: AdminSortField | null
-  sortDir: SortDir
-  onSort: (field: AdminSortField) => void
+  sortRules: SortRule<AdminSortField>[]
+  onSort: (field: AdminSortField, e?: React.MouseEvent) => void
 }
 
-export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId, sortBy, sortDir, onSort }: Props) {
+export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId, sortRules, onSort }: Props) {
+  const getRule = (field: AdminSortField) => sortRules.find(r => r.field === field)
   const SortIcon = ({ field }: { field: AdminSortField }) => {
-    if (sortBy !== field) return <ArrowUpDown size={14} className="opacity-40" />
-    return sortDir === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />
+    const rule = getRule(field)
+    if (!rule) return <ArrowUpDown size={14} className="opacity-40" />
+    const idx = sortRules.findIndex(r => r.field === field)
+    return (
+      <span className="inline-flex items-center gap-1">
+        {rule.dir === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
+        {sortRules.length > 1 && <span className="text-[10px] font-bold text-amber-400">{idx + 1}</span>}
+      </span>
+    )
   }
   const thCls = 'inline-flex items-center gap-1.5 cursor-pointer select-none hover:text-white transition uppercase tracking-wider'
   if (cards.length === 0) {
@@ -33,12 +41,12 @@ export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId,
       <table className="w-full text-left text-sm">
         <thead className="bg-zinc-900 text-xs uppercase text-zinc-400">
           <tr>
-            <th className="px-3 py-3"><button onClick={() => onSort('name')} className={thCls}>Nombre <SortIcon field="name" /></button></th>
-            <th className="px-3 py-3"><button onClick={() => onSort('edition')} className={thCls}>Edición <SortIcon field="edition" /></button></th>
-            <th className="px-3 py-3"><button onClick={() => onSort('owner')} className={thCls}>Dueño <SortIcon field="owner" /></button></th>
-            <th className="px-3 py-3"><button onClick={() => onSort('condition')} className={thCls}>Cond. <SortIcon field="condition" /></button></th>
-            <th className="px-3 py-3"><button onClick={() => onSort('quantity')} className={thCls}>Cant. <SortIcon field="quantity" /></button></th>
-            <th className="px-3 py-3 text-right"><button onClick={() => onSort('price')} className={`${thCls} ml-auto`}>Precio <SortIcon field="price" /></button></th>
+            <th className="px-3 py-3"><button onClick={e => onSort('name', e)} className={thCls}>Nombre <SortIcon field="name" /></button></th>
+            <th className="px-3 py-3"><button onClick={e => onSort('edition', e)} className={thCls}>Edición <SortIcon field="edition" /></button></th>
+            <th className="px-3 py-3"><button onClick={e => onSort('owner', e)} className={thCls}>Dueño <SortIcon field="owner" /></button></th>
+            <th className="px-3 py-3"><button onClick={e => onSort('condition', e)} className={thCls}>Cond. <SortIcon field="condition" /></button></th>
+            <th className="px-3 py-3"><button onClick={e => onSort('quantity', e)} className={thCls}>Cant. <SortIcon field="quantity" /></button></th>
+            <th className="px-3 py-3 text-right"><button onClick={e => onSort('price', e)} className={`${thCls} ml-auto`}>Precio <SortIcon field="price" /></button></th>
             <th className="px-3 py-3 text-right">Acciones</th>
           </tr>
         </thead>
@@ -56,8 +64,8 @@ export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId,
               <td className="px-3 py-3 text-right text-amber-400">{formatPrice(c.price_usd)}</td>
               <td className="px-3 py-3">
                 <div className="flex justify-end gap-1">
-                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onView(c) }} aria-label="Ver detalle" title="Ver detalle" className="h-10 w-10 p-0">
-                    <Eye size={22} />
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onView(c) }} aria-label="Ver detalle" title="Ver detalle" className="h-9 w-9 p-0">
+                    <Eye size={20} />
                   </Button>
                   <Button
                     variant="ghost"
@@ -66,15 +74,15 @@ export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId,
                     disabled={syncingId === c.id}
                     aria-label={`Sincronizar ${c.name_en ?? c.name_es}`}
                     title="Sincronizar con Scryfall"
-                    className="h-10 w-10 p-0"
+                    className="h-9 w-9 p-0"
                   >
-                    {syncingId === c.id ? <Loader2 size={22} className="animate-spin" /> : <RefreshCw size={22} />}
+                    {syncingId === c.id ? <Loader2 size={20} className="animate-spin" /> : <RefreshCw size={20} />}
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(c) }} aria-label="Editar" title="Editar carta" className="h-10 w-10 p-0">
-                    <Pencil size={22} />
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(c) }} aria-label="Editar" title="Editar carta" className="h-9 w-9 p-0">
+                    <Pencil size={20} />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onDelete(c.id) }} aria-label="Eliminar" title="Eliminar carta" className="h-10 w-10 p-0 !text-red-500 hover:!text-red-400 hover:bg-red-950/30">
-                    <Trash2 size={22} />
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onDelete(c.id) }} aria-label="Eliminar" title="Eliminar carta" className="h-9 w-9 p-0 !text-red-500 hover:!text-red-400 hover:bg-red-950/30">
+                    <Trash2 size={20} />
                   </Button>
                 </div>
               </td>
