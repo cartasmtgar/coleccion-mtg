@@ -68,6 +68,7 @@ Pasos:
 ### 6. Commits & Changelog
 - Seguir formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/).
 - Mensajes de commit en español o inglés, en imperativo: `feat: agrega sync masivo Scryfall`.
+- **Regla de pushes:** No pushear a GitHub con cada cambio. Crear commits locales atómicos y acumularlos; hacer push grande solo cuando el usuario lo indique. El agente puede recomendar cuándo pushear.
 
 ## Variables de Entorno
 ```
