@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { LogOut, Plus, RefreshCw, Loader2, Sparkles, ExternalLink, LayoutDashboard, AlertTriangle } from 'lucide-react'
+import { LogOut, Plus, RefreshCw, Loader2, Sparkles, ExternalLink, LayoutDashboard, AlertTriangle, ArrowUp, ArrowDown } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { SearchFilters } from '../components/public/SearchFilters'
 import { AdminTable } from '../components/admin/AdminTable'
@@ -9,6 +9,7 @@ import { CardDetail } from '../components/public/CardDetail'
 import { CardGrid } from '../components/public/CardGrid'
 import { Modal } from '../components/ui/Modal'
 import { Pagination } from '../components/ui/Pagination'
+import { Select } from '../components/ui/Input'
 import { useCards } from '../hooks/useCards'
 import { useAuth } from '../context/AuthContext'
 import { DEFAULT_FILTERS, type CardFilters, type CatalogView } from '../types/filters'
@@ -340,6 +341,25 @@ export function AdminPage() {
         </div>
 
         <SearchFilters filters={filters} onChange={(p) => setFilters((f) => ({ ...f, ...p }))} view={catalogView} onViewChange={setCatalogView} editions={editions} owners={owners} />
+
+        {catalogView === 'grid' && (
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2.5">
+            <span className="text-xs font-medium text-zinc-400">Ordenar por:</span>
+            <Select value={sortBy ?? ''} onChange={e => { const v = e.target.value as import('../components/admin/AdminTable').AdminSortField; if (v) handleSort(v); else { setSortBy(null); setSortDir('asc') } }} className="w-36 py-1.5 text-xs">
+              <option value="">Por defecto</option>
+              <option value="name">Nombre</option>
+              <option value="edition">Edición</option>
+              <option value="owner">Dueño</option>
+              <option value="condition">Condición</option>
+              <option value="quantity">Cantidad</option>
+              <option value="price">Precio u.</option>
+            </Select>
+            <button onClick={() => setSortDir(d => d === 'asc' ? 'desc' : 'asc')} className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700" aria-label="Cambiar orden">
+              {sortDir === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
+            </button>
+            {sortBy && <span className="text-xs capitalize text-zinc-500">{sortBy} {sortDir === 'asc' ? '↑' : '↓'}</span>}
+          </div>
+        )}
 
         <Pagination page={page} pageSize={pageSize} total={filtered.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
         {catalogView === 'grid' ? (
