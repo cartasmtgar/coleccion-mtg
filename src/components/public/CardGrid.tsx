@@ -10,7 +10,7 @@ export function CardGrid({ cards, onSelect }: { cards: (Card & { _total?: number
   }
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {cards.map((card) => (
+      {cards.map((card, idx) => (
         <article
           key={card.id}
           onClick={() => onSelect(card)}
@@ -21,7 +21,10 @@ export function CardGrid({ cards, onSelect }: { cards: (Card & { _total?: number
               <img
                 src={card.image_url}
                 alt={card.name_en ?? card.name_es}
-                loading="lazy"
+                loading={idx < 8 ? 'eager' : 'lazy'}
+                decoding="async"
+                // @ts-ignore - fetchPriority es válido en img pero no tipado en React 19
+                fetchPriority={idx < 8 ? 'high' : 'auto'}
                 className="h-full w-full object-cover scale-[1.03] transition duration-300 group-hover:scale-[1.06]"
               />
             ) : (
