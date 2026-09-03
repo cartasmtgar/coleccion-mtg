@@ -68,6 +68,7 @@ export function CatalogPage() {
   const sorted = useMemo(() => {
     if (!sortBy) return grouped
     const dir = sortDir === 'asc' ? 1 : -1
+    const rarityOrder: Record<string, number> = { common: 1, uncommon: 2, rare: 3, mythic: 4, special: 5, bonus: 6, basic: 7 }
     return [...grouped].sort((a, b) => {
       let av: string | number = ''
       let bv: string | number = ''
@@ -79,6 +80,18 @@ export function CatalogPage() {
         case 'edition':
           av = (a.edition ?? '').toLowerCase()
           bv = (b.edition ?? '').toLowerCase()
+          break
+        case 'rarity':
+          av = rarityOrder[a.rarity ?? ''] ?? 99
+          bv = rarityOrder[b.rarity ?? ''] ?? 99
+          break
+        case 'language':
+          av = (a.language ?? '').toLowerCase()
+          bv = (b.language ?? '').toLowerCase()
+          break
+        case 'condition':
+          av = (a.condition ?? '').toLowerCase()
+          bv = (b.condition ?? '').toLowerCase()
           break
         case 'quantity':
           av = (a as unknown as { _total?: number })._total ?? a.quantity
@@ -186,6 +199,9 @@ export function CatalogPage() {
                   <option value="">Por defecto</option>
                   <option value="name">Nombre</option>
                   <option value="edition">Edición</option>
+                  <option value="rarity">Rareza</option>
+                  <option value="language">Idioma</option>
+                  <option value="condition">Condición</option>
                   <option value="quantity">Cantidad</option>
                   <option value="price">Precio u.</option>
                 </Select>

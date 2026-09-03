@@ -2,7 +2,7 @@ import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react'
 import { formatPrice } from '../../lib/utils'
 import type { Card } from '../../types/card'
 
-export type CatalogSortField = 'name' | 'edition' | 'quantity' | 'price'
+export type CatalogSortField = 'name' | 'edition' | 'rarity' | 'language' | 'condition' | 'quantity' | 'price'
 export type CatalogSortDir = 'asc' | 'desc'
 
 export function CardTable({ cards, onSelect, sortBy, sortDir, onSort }: { cards: (Card & { _total?: number; _langs?: Record<string, number> })[]; onSelect: (c: Card) => void; sortBy: CatalogSortField | null; sortDir: CatalogSortDir; onSort: (f: CatalogSortField) => void }) {
@@ -21,9 +21,9 @@ export function CardTable({ cards, onSelect, sortBy, sortDir, onSort }: { cards:
           <tr>
             <th className="px-4 py-3"><button onClick={() => onSort('name')} className={thCls}>Nombre <SortIcon field="name" /></button></th>
             <th className="px-4 py-3"><button onClick={() => onSort('edition')} className={thCls}>Edición <SortIcon field="edition" /></button></th>
-            <th className="px-4 py-3">Rareza</th>
-            <th className="px-4 py-3">Idioma</th>
-            <th className="px-4 py-3">Cond.</th>
+            <th className="px-4 py-3"><button onClick={() => onSort('rarity')} className={thCls}>Rareza <SortIcon field="rarity" /></button></th>
+            <th className="px-4 py-3"><button onClick={() => onSort('language')} className={thCls}>Idioma <SortIcon field="language" /></button></th>
+            <th className="px-4 py-3"><button onClick={() => onSort('condition')} className={thCls}>Cond. <SortIcon field="condition" /></button></th>
             <th className="px-4 py-3"><button onClick={() => onSort('quantity')} className={thCls}>Cant. <SortIcon field="quantity" /></button></th>
             <th className="px-4 py-3 text-right"><button onClick={() => onSort('price')} className={`${thCls} ml-auto`}>Precio u. <SortIcon field="price" /></button></th>
           </tr>
