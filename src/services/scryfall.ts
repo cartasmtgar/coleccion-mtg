@@ -57,9 +57,50 @@ export async function searchScryfallExact(
 
   for (const candidate of uniqueCandidates) {
     const result = await searchScryfallExactSingle(candidate, edition)
-    if (result) return result
+    if (result) {
+      // Si hay variante goldfish (A/B o artista), intentar resolver a la impresión exacta
+      const variantCard = await resolveVariantIfNeeded(result, _goldfishUrl)
+      return variantCard ?? result
+    }
   }
   return null
+}
+
+async function resolveVariantIfNeeded(card: ScryfallCard, goldfishUrl: string | null): Promise<ScryfallCard | null> {
+  const gold = parseGoldfishUrl(goldfishUrl)
+  const variant = gold.variant
+  if (!variant) return null
+  // Solo intentar si hay variant y card tiene prints_search_uri
+  const printsUri = (card as unknown as { prints_search_uri?: string }).prints_search_uri
+  if (!printsUri) return null
+  try {
+    await throttle()
+    const res = await fetch(printsUri, { headers: { Accept: 'application/json' } })
+    if (res.status === 429) {
+      const retry = Number(res.headers.get('Retry-After') ?? '1') * 1000
+      await new Promise(r => setTimeout(r, retry))
+      return resolveVariantIfNeeded(card, goldfishUrl)
+    }
+    if (!res.ok) return null
+    const data = (await res.json()) as { data: ScryfallCard[] }
+    // Buscar por collector_number con sufijo A/B o por artista
+    const variantLower = variant.toLowerCase()
+    // Caso 1: variante corta A/B/C -> collector_number termina en a/b/c
+    if (/^[a-c]$/i.test(variant)) {
+      const found = data.data.find(c => c.collector_number.toLowerCase().endsWith(variantLower))
+      if (found) return found
+    }
+    // Caso 2: artista (ej Tedin, Menges, Benson)
+    const byArtist = data.data.find(c => {
+      const artist = (c as unknown as { artist?: string }).artist
+      return artist && artist.toLowerCase().includes(variantLower)
+    })
+    if (byArtist) return byArtist
+    // Fallback: si no encontró por variante, no reemplazar
+    return null
+  } catch {
+    return null
+  }
 }
 
 async function searchScryfallExactSingle(

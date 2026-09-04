@@ -16,7 +16,7 @@ import { DEFAULT_FILTERS, type CardFilters, type CatalogView } from '../types/fi
 import type { Card } from '../types/card'
 import type { ScryfallCard } from '../types/scryfall'
 import { fetchByScryfallId, searchScryfallExact, bulkFetchCollection, getScryfallImage, getScryfallPrice } from '../services/scryfall'
-import { editionToSetCode, getCanonicalEnglishName, normalizeForCompare } from '../lib/mtg-sets'
+import { editionToSetCode, getCanonicalEnglishName, normalizeForCompare, parseGoldfishUrl } from '../lib/mtg-sets'
 import { applySort, removeRule, toggleDir, type SortRule } from '../lib/sort'
 import * as cardsService from '../services/cards.service'
 
@@ -138,9 +138,18 @@ export function AdminPage() {
   const handleSyncAll = async () => {
     // Usa filtrado actual si hay filtros activos, si no todo - siempre re-resuelve por nombre+edición para corregir ediciones erróneas
     const toSync = filtered.length > 0 && filtered.length < cards.length ? filtered : cards
-    // Dedup por nombre canónico + set (usa helper que corrige columnas invertidas y sufijos de artista) - normalizado para acentos/apóstrofes
-    const keyToCards = new Map<string, Card[]>()
+    // Separa variantes (goldfish con -A/-B/artist) para resolver individualmente (bulk no distingue variantes)
+    const variantCards: Card[] = []
+    const bulkCards: Card[] = []
     for (const c of toSync) {
+      const variant = parseGoldfishUrl(c.goldfish_url).variant
+      if (variant) variantCards.push(c)
+      else bulkCards.push(c)
+    }
+
+    // Dedup para bulk solo (sin variantes)
+    const keyToCards = new Map<string, Card[]>()
+    for (const c of bulkCards) {
       const set = editionToSetCode(c.edition)
       const canonical = normalizeForCompare(getCanonicalEnglishName(c) || c.name_en || c.name_es || '')
       const key = `${canonical}|${set ?? ''}`
@@ -159,8 +168,17 @@ export function AdminPage() {
     setSyncingAll(true)
     setSyncProgress({ done: 0, total: toSync.length })
 
-    // Sync por name+set en bulk (75 máx por request) - corrige ediciones previas erróneas
-    // Ya no separara por idCards; todos se re-resuelven por nombre+set
+    // Primero sync variantes individualmente (goldfish con -A/-B/artist) para no perder la variante en bulk
+    for (const card of variantCards) {
+      try {
+        setSyncingId(card.id)
+        const sc = await searchScryfallExact(card.name_en || card.name_es, card.edition, card.language, card.goldfish_url)
+        if (sc) await cardsService.syncCardWithScryfall(card, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc) })
+      } catch {}
+      setSyncProgress(p => (p ? { done: p.done + 1, total: p.total } : p))
+    }
+
+    // Luego sync bulk para el resto (sin variantes)
     const BATCH = 75
     for (let i = 0; i < uniqueIdentifiers.length; i += BATCH) {
       const batchIds = uniqueIdentifiers.slice(i, i + BATCH)
@@ -184,14 +202,21 @@ export function AdminPage() {
               setSyncProgress(p => (p ? { done: p.done + 1, total: p.total } : p))
             }
           } else {
-            // no encontrado, avanzar contador
-            for (const _card of cardsForKey) setSyncProgress(p => (p ? { done: p.done + 1, total: p.total } : p))
+            // Intenta individual por si es variante no encontrada en bulk
+            for (const card of cardsForKey) {
+              try {
+                const sc2 = await searchScryfallExact(card.name_en || card.name_es, card.edition, card.language, card.goldfish_url)
+                if (sc2) await cardsService.syncCardWithScryfall(card, { id: sc2.id, uri: sc2.scryfall_uri, image: getScryfallImage(sc2), price: getScryfallPrice(sc2) })
+              } catch {}
+              setSyncProgress(p => (p ? { done: p.done + 1, total: p.total } : p))
+            }
           }
         }
       } catch {
         // fallback a individual exact si bulk falla
         for (const ident of batchIds) {
-          const cardsForKey = keyToCards.get(`${ident.name!.toLowerCase()}|${ident.set ?? ''}`) ?? []
+          const key = `${normalizeForCompare(ident.name!)}|${ident.set ?? ''}`
+          const cardsForKey = keyToCards.get(key) ?? []
           for (const card of cardsForKey) {
             try {
               const sc = await searchScryfallExact(card.name_en || card.name_es, card.edition, card.language, card.goldfish_url)
