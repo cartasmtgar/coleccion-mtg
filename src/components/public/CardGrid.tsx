@@ -16,15 +16,15 @@ export function CardGrid({ cards, onSelect, page = 0 }: { cards: (Card & { _tota
           onClick={() => onSelect(card)}
           className="group cursor-pointer overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 transition hover:border-amber-600/50 hover:shadow-lg hover:shadow-amber-900/10"
         >
-          <div className="aspect-[2.5/3.5] overflow-hidden bg-zinc-900 rounded-xl">
+          <div className="aspect-[2.5/3.5] bg-zinc-900 rounded-xl overflow-hidden" style={{ contentVisibility: 'visible' }}>
             {card.image_url ? (
               <img
                 src={card.image_url}
                 alt={card.name_en ?? card.name_es}
-                loading={idx < 12 ? 'eager' : 'lazy'}
-                decoding="async"
+                loading="eager"
+                decoding="sync"
                 // @ts-ignore - fetchPriority es válido en img pero no tipado en React 19
-                fetchPriority={idx < 4 ? 'high' : 'auto'}
+                fetchPriority="high"
                 className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
               />
             ) : (
