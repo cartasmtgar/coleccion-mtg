@@ -333,14 +333,14 @@ export function AdminPage() {
               <span className={`flex h-6 w-5 items-center justify-center rounded-md ${sortRules.length > 1 ? 'cursor-grab active:cursor-grabbing text-zinc-500 hover:text-zinc-300' : 'cursor-not-allowed text-zinc-600 opacity-40'}`} title={sortRules.length > 1 ? 'Arrastrar para reordenar' : 'Añade otro orden para reordenar'}>
                 <GripVertical size={12} />
               </span>
-              <Select value={r.field} onChange={e => { const v = e.target.value as import('../components/admin/AdminTable').AdminSortField; const copy = [...sortRules]; copy[idx] = { field: v, dir: r.dir }; setSortRules(copy) }} className="w-20 py-1 text-xs border-0 bg-transparent p-0">
-                <option value="name">Nombre</option>
-                <option value="edition">Edición</option>
-                <option value="owner">Dueño</option>
-                <option value="condition">Condición</option>
-                <option value="quantity">Cantidad</option>
-                <option value="price">Precio u.</option>
-              </Select>
+              <Select value={r.field} onChange={e => { const v = e.target.value as import('../components/admin/AdminTable').AdminSortField; const copy = [...sortRules]; copy[idx] = { field: v, dir: r.dir }; setSortRules(copy) }} className="!w-20 shrink-0 py-1 text-xs border-0 bg-transparent p-0">
+                  <option value="name">Nombre</option>
+                  <option value="edition">Edición</option>
+                  <option value="owner">Dueño</option>
+                  <option value="condition">Condición</option>
+                  <option value="quantity">Cantidad</option>
+                  <option value="price">Precio u.</option>
+                </Select>
               <div className="flex min-w-[56px] shrink-0 overflow-hidden rounded-md border border-zinc-700">
                 <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'asc'))} className={`flex-1 flex items-center justify-center p-1 ${r.dir === 'asc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`} aria-label="Ascendente"><ArrowUp size={12} className="shrink-0" /></button>
                 <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'desc'))} className={`flex-1 flex items-center justify-center p-1 ${r.dir === 'desc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`} aria-label="Descendente"><ArrowDown size={12} className="shrink-0" /></button>
@@ -349,7 +349,7 @@ export function AdminPage() {
             </div>
           ))}
             {sortRules.length < 3 && (
-              <Select value="" onChange={e => { const v = e.target.value as import('../components/admin/AdminTable').AdminSortField; if (v && !sortRules.find(x => x.field === v)) setSortRules([...sortRules, { field: v, dir: 'asc' }]) }} className="w-24 py-1 text-xs">
+              <Select value="" onChange={e => { const v = e.target.value as import('../components/admin/AdminTable').AdminSortField; if (v && !sortRules.find(x => x.field === v)) setSortRules([...sortRules, { field: v, dir: 'asc' }]) }} className="!w-24 shrink-0 py-1 text-xs">
                 <option value="">+ Añadir</option>
                 <option value="name">Nombre</option>
                 <option value="edition">Edición</option>
