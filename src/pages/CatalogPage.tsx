@@ -14,7 +14,7 @@ import type { Card } from '../types/card'
 import type { ScryfallCard } from '../types/scryfall'
 import { fetchByScryfallId } from '../services/scryfall'
 import { isSupabaseConfigured } from '../lib/supabase'
-import { applySort, removeRule, toggleDir, upsertRule, type SortRule } from '../lib/sort'
+import { applySort, removeRule, toggleDir, type SortRule } from '../lib/sort'
 
 export function CatalogPage() {
   const { cards, loading, error } = useCards()
@@ -89,17 +89,6 @@ export function CatalogPage() {
     } catch {}
   }, [sortRules])
 
-  const handleSort = (field: CatalogSortField, e?: React.MouseEvent) => {
-    // Shift+click añade, click normal reemplaza (manteniendo compatibilidad)
-    const isMulti = e?.shiftKey
-    if (isMulti) setSortRules(r => upsertRule(r, field))
-    else setSortRules(r => {
-      const existing = r.find(x => x.field === field)
-      if (existing) return [{ field, dir: existing.dir === 'asc' ? 'desc' : 'asc' }]
-      return [{ field, dir: 'asc' }]
-    })
-  }
-
   const handleAddRule = (field: CatalogSortField) => {
     if (!field) return
     setSortRules(r => (r.find(x => x.field === field) ? r : [...r, { field, dir: 'asc' as const }].slice(0, 3)))
@@ -172,73 +161,71 @@ export function CatalogPage() {
               hideOwner
             />
 
-            {catalogView === 'grid' && (
-              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 px-2 py-2">
-                <span className="text-xs font-medium text-zinc-400">Ordenar por (máx 3):</span>
-                {sortRules.map((r, idx) => (
-                  <div
-                    key={r.field}
-                    draggable={sortRules.length > 1}
-                    onDragStart={e => { if (sortRules.length <= 1) { e.preventDefault(); return } e.dataTransfer.setData('text/plain', String(idx)); e.dataTransfer.effectAllowed = 'move' }}
-                    onDragOver={e => e.preventDefault()}
-                    onDrop={e => {
-                      e.preventDefault()
-                      const from = Number(e.dataTransfer.getData('text/plain'))
-                      if (Number.isNaN(from) || from === idx) return
-                      const copy = [...sortRules]
-                      const [moved] = copy.splice(from, 1)
-                      copy.splice(idx, 0, moved)
-                      setSortRules(copy)
-                    }}
-                    className="flex items-center gap-1 rounded-lg border border-zinc-700 bg-zinc-800 px-1.5 py-1"
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 px-2 py-2">
+              <span className="text-xs font-medium text-zinc-400">Ordenar por (máx 3):</span>
+              {sortRules.map((r, idx) => (
+                <div
+                  key={r.field}
+                  draggable={sortRules.length > 1}
+                  onDragStart={e => { if (sortRules.length <= 1) { e.preventDefault(); return } e.dataTransfer.setData('text/plain', String(idx)); e.dataTransfer.effectAllowed = 'move' }}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => {
+                    e.preventDefault()
+                    const from = Number(e.dataTransfer.getData('text/plain'))
+                    if (Number.isNaN(from) || from === idx) return
+                    const copy = [...sortRules]
+                    const [moved] = copy.splice(from, 1)
+                    copy.splice(idx, 0, moved)
+                    setSortRules(copy)
+                  }}
+                  className="flex items-center gap-1 rounded-lg border border-zinc-700 bg-zinc-800 px-1.5 py-1"
+                >
+                  <span
+                    className={`flex h-6 w-5 items-center justify-center rounded-md ${sortRules.length > 1 ? 'cursor-grab active:cursor-grabbing text-zinc-500 hover:text-zinc-300' : 'cursor-not-allowed text-zinc-600 opacity-40'}`}
+                    title={sortRules.length > 1 ? 'Arrastrar para reordenar' : 'Añade otro orden para reordenar'}
                   >
-                    <span
-                      className={`flex h-6 w-5 items-center justify-center rounded-md ${sortRules.length > 1 ? 'cursor-grab active:cursor-grabbing text-zinc-500 hover:text-zinc-300' : 'cursor-not-allowed text-zinc-600 opacity-40'}`}
-                      title={sortRules.length > 1 ? 'Arrastrar para reordenar' : 'Añade otro orden para reordenar'}
-                    >
-                      <GripVertical size={12} />
-                    </span>
-                    <Select value={r.field} onChange={e => { const v = e.target.value as CatalogSortField; const copy = [...sortRules]; copy[idx] = { field: v, dir: r.dir }; setSortRules(copy) }} className="w-20 py-1 text-xs border-0 bg-transparent p-0">
-                      <option value="name">Nombre</option>
-                      <option value="edition">Edición</option>
-                      <option value="rarity">Rareza</option>
-                      <option value="language">Idioma</option>
-                      <option value="condition">Condición</option>
-                      <option value="quantity">Cantidad</option>
-                      <option value="price">Precio u.</option>
-                    </Select>
-                    <div className="flex min-w-[56px] shrink-0 overflow-hidden rounded-md border border-zinc-700">
-                      <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'asc'))} className={`flex-1 flex items-center justify-center p-1 ${r.dir === 'asc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`} aria-label="Ascendente"><ArrowUp size={12} className="shrink-0" /></button>
-                      <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'desc'))} className={`flex-1 flex items-center justify-center p-1 ${r.dir === 'desc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`} aria-label="Descendente"><ArrowDown size={12} className="shrink-0" /></button>
-                    </div>
-                    <button onClick={() => setSortRules(removeRule(sortRules, r.field))} className="ml-1 text-zinc-500 hover:text-white"><X size={12} /></button>
+                    <GripVertical size={12} />
+                  </span>
+                  <Select value={r.field} onChange={e => { const v = e.target.value as CatalogSortField; const copy = [...sortRules]; copy[idx] = { field: v, dir: r.dir }; setSortRules(copy) }} className="w-20 py-1 text-xs border-0 bg-transparent p-0">
+                    <option value="name">Nombre</option>
+                    <option value="edition">Edición</option>
+                    <option value="rarity">Rareza</option>
+                    <option value="language">Idioma</option>
+                    <option value="condition">Condición</option>
+                    <option value="quantity">Cantidad</option>
+                    <option value="price">Precio u.</option>
+                  </Select>
+                  <div className="flex min-w-[56px] shrink-0 overflow-hidden rounded-md border border-zinc-700">
+                    <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'asc'))} className={`flex-1 flex items-center justify-center p-1 ${r.dir === 'asc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`} aria-label="Ascendente"><ArrowUp size={12} className="shrink-0" /></button>
+                    <button onClick={() => setSortRules(toggleDir(sortRules, r.field, 'desc'))} className={`flex-1 flex items-center justify-center p-1 ${r.dir === 'desc' ? 'bg-amber-500 text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`} aria-label="Descendente"><ArrowDown size={12} className="shrink-0" /></button>
                   </div>
-                ))}
-                {sortRules.length < 3 && (
-                  <div className="flex items-center gap-1">
-                    <Select value="" onChange={e => { const v = e.target.value as CatalogSortField; if (v) handleAddRule(v) }} className="w-24 py-1 text-xs">
-                      <option value="">+ Añadir</option>
-                      <option value="name">Nombre</option>
-                      <option value="edition">Edición</option>
-                      <option value="rarity">Rareza</option>
-                      <option value="language">Idioma</option>
-                      <option value="condition">Condición</option>
-                      <option value="quantity">Cantidad</option>
-                      <option value="price">Precio u.</option>
-                    </Select>
-                  </div>
-                )}
-                {sortRules.length > 0 && (
-                  <button onClick={() => setSortRules([])} className="text-xs text-zinc-500 hover:text-white underline">Limpiar</button>
-                )}
-              </div>
-            )}
+                  <button onClick={() => setSortRules(removeRule(sortRules, r.field))} className="ml-1 text-zinc-500 hover:text-white"><X size={12} /></button>
+                </div>
+              ))}
+              {sortRules.length < 3 && (
+                <div className="flex items-center gap-1">
+                  <Select value="" onChange={e => { const v = e.target.value as CatalogSortField; if (v) handleAddRule(v) }} className="w-24 py-1 text-xs">
+                    <option value="">+ Añadir</option>
+                    <option value="name">Nombre</option>
+                    <option value="edition">Edición</option>
+                    <option value="rarity">Rareza</option>
+                    <option value="language">Idioma</option>
+                    <option value="condition">Condición</option>
+                    <option value="quantity">Cantidad</option>
+                    <option value="price">Precio u.</option>
+                  </Select>
+                </div>
+              )}
+              {sortRules.length > 0 && (
+                <button onClick={() => setSortRules([])} className="text-xs text-zinc-500 hover:text-white underline">Limpiar</button>
+              )}
+            </div>
 
             <Pagination page={page} pageSize={pageSize} total={sorted.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
             {catalogView === 'grid' ? (
               <CardGrid cards={paginated} onSelect={handleSelect} />
             ) : (
-              <CardTable cards={paginated} onSelect={handleSelect} sortRules={sortRules} onSort={handleSort} />
+              <CardTable cards={paginated} onSelect={handleSelect} />
             )}
             <Pagination page={page} pageSize={pageSize} total={sorted.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
           </div>

@@ -1,8 +1,7 @@
-import { Pencil, Trash2, RefreshCw, Loader2, Eye, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react'
+import { Pencil, Trash2, RefreshCw, Loader2, Eye } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { formatPrice } from '../../lib/utils'
 import type { Card } from '../../types/card'
-import type { SortRule } from '../../lib/sort'
 
 export type AdminSortField = 'name' | 'edition' | 'owner' | 'condition' | 'quantity' | 'price'
 export type SortDir = 'asc' | 'desc'
@@ -14,24 +13,9 @@ interface Props {
   onSync: (c: Card) => void
   onView: (c: Card) => void
   syncingId: string | null
-  sortRules: SortRule<AdminSortField>[]
-  onSort: (field: AdminSortField, e?: React.MouseEvent) => void
 }
 
-export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId, sortRules, onSort }: Props) {
-  const getRule = (field: AdminSortField) => sortRules.find(r => r.field === field)
-  const SortIcon = ({ field }: { field: AdminSortField }) => {
-    const rule = getRule(field)
-    if (!rule) return <ArrowUpDown size={14} className="opacity-40" />
-    const idx = sortRules.findIndex(r => r.field === field)
-    return (
-      <span className="inline-flex items-center gap-1">
-        {rule.dir === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
-        {sortRules.length > 1 && <span className="text-[10px] font-bold text-amber-400">{idx + 1}</span>}
-      </span>
-    )
-  }
-  const thCls = 'inline-flex items-center gap-1.5 cursor-pointer select-none hover:text-white transition uppercase tracking-wider'
+export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId }: Props) {
   if (cards.length === 0) {
     return <p className="py-10 text-center text-zinc-500">Sin cartas. Agrega la primera.</p>
   }
@@ -41,12 +25,12 @@ export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId,
       <table className="w-full text-left text-sm">
         <thead className="bg-zinc-900 text-xs uppercase text-zinc-400">
           <tr>
-            <th className="px-3 py-3"><button onClick={e => onSort('name', e)} className={thCls}>Nombre <SortIcon field="name" /></button></th>
-            <th className="px-3 py-3"><button onClick={e => onSort('edition', e)} className={thCls}>Edición <SortIcon field="edition" /></button></th>
-            <th className="px-3 py-3"><button onClick={e => onSort('owner', e)} className={thCls}>Dueño <SortIcon field="owner" /></button></th>
-            <th className="px-3 py-3"><button onClick={e => onSort('condition', e)} className={thCls}>Cond. <SortIcon field="condition" /></button></th>
-            <th className="px-3 py-3"><button onClick={e => onSort('quantity', e)} className={thCls}>Cant. <SortIcon field="quantity" /></button></th>
-            <th className="px-3 py-3 text-right"><button onClick={e => onSort('price', e)} className={`${thCls} ml-auto`}>Precio <SortIcon field="price" /></button></th>
+            <th className="px-3 py-3">Nombre</th>
+            <th className="px-3 py-3">Edición</th>
+            <th className="px-3 py-3">Dueño</th>
+            <th className="px-3 py-3">Cond.</th>
+            <th className="px-3 py-3">Cant.</th>
+            <th className="px-3 py-3 text-right">Precio</th>
             <th className="px-3 py-3 text-right">Acciones</th>
           </tr>
         </thead>
