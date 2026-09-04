@@ -4,7 +4,7 @@ import type { Card } from '../../types/card'
 
 type AggregatedCard = Card & { _total?: number; _langs?: Record<string, number> }
 
-export function CardGrid({ cards, onSelect }: { cards: (Card & { _total?: number; _langs?: Record<string, number> })[]; onSelect: (c: Card) => void }) {
+export function CardGrid({ cards, onSelect, page = 0 }: { cards: (Card & { _total?: number; _langs?: Record<string, number> })[]; onSelect: (c: Card) => void; page?: number }) {
   if (cards.length === 0) {
     return <p className="py-12 text-center text-zinc-500">No se encontraron cartas con los filtros actuales.</p>
   }
@@ -12,7 +12,7 @@ export function CardGrid({ cards, onSelect }: { cards: (Card & { _total?: number
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {cards.map((card, idx) => (
         <article
-          key={card.id}
+          key={`${card.id}-${page}-${idx}`}
           onClick={() => onSelect(card)}
           className="group cursor-pointer overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 transition hover:border-amber-600/50 hover:shadow-lg hover:shadow-amber-900/10"
         >
@@ -21,10 +21,10 @@ export function CardGrid({ cards, onSelect }: { cards: (Card & { _total?: number
               <img
                 src={card.image_url}
                 alt={card.name_en ?? card.name_es}
-                loading={idx < 8 ? 'eager' : 'lazy'}
+                loading={idx < 12 ? 'eager' : 'lazy'}
                 decoding="async"
                 // @ts-ignore - fetchPriority es válido en img pero no tipado en React 19
-                fetchPriority={idx < 8 ? 'high' : 'auto'}
+                fetchPriority={idx < 4 ? 'high' : 'auto'}
                 className="h-full w-full object-cover scale-[1.03] transition duration-300 group-hover:scale-[1.06]"
               />
             ) : (

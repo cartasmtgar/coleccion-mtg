@@ -18,7 +18,14 @@ import { applySort, removeRule, toggleDir, type SortRule } from '../lib/sort'
 
 export function CatalogPage() {
   const { cards, loading, error } = useCards()
-  const [catalogView, setCatalogView] = useState<CatalogView>('grid')
+  const [catalogView, setCatalogView] = useState<CatalogView>(() => {
+    try {
+      const v = localStorage.getItem('catalog:view') as CatalogView | null
+      return v === 'grid' || v === 'table' ? v : 'grid'
+    } catch {
+      return 'grid'
+    }
+  })
   const [filters, setFilters] = useState<CardFilters>(DEFAULT_FILTERS)
   const [contactOpen, setContactOpen] = useState(false)
   const [detailCard, setDetailCard] = useState<Card | null>(null)
@@ -88,6 +95,12 @@ export function CatalogPage() {
       localStorage.setItem('catalog:sort', JSON.stringify(sortRules))
     } catch {}
   }, [sortRules])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('catalog:view', catalogView)
+    } catch {}
+  }, [catalogView])
 
   const handleAddRule = (field: CatalogSortField) => {
     if (!field) return
@@ -223,7 +236,7 @@ export function CatalogPage() {
 
             <Pagination page={page} pageSize={pageSize} total={sorted.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
             {catalogView === 'grid' ? (
-              <CardGrid cards={paginated} onSelect={handleSelect} />
+              <CardGrid cards={paginated} onSelect={handleSelect} page={page} />
             ) : (
               <CardTable cards={paginated} onSelect={handleSelect} />
             )}

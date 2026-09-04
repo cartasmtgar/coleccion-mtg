@@ -25,7 +25,14 @@ export function AdminPage() {
   const { signOut, user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const syncFilter = searchParams.get('sync') as 'synced' | 'pending' | null
-  const [catalogView, setCatalogView] = useState<CatalogView>('table')
+  const [catalogView, setCatalogView] = useState<CatalogView>(() => {
+    try {
+      const v = localStorage.getItem('admin:view') as CatalogView | null
+      return v === 'grid' || v === 'table' ? v : 'table'
+    } catch {
+      return 'table'
+    }
+  })
   const [filters, setFilters] = useState<CardFilters>(DEFAULT_FILTERS)
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Card | null>(null)
@@ -85,6 +92,12 @@ export function AdminPage() {
       localStorage.setItem('admin:sort', JSON.stringify(sortRules))
     } catch {}
   }, [sortRules])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('admin:view', catalogView)
+    } catch {}
+  }, [catalogView])
 
   // Inicializa filtros desde query params del dashboard (?owner=Pollo&rarity=rare etc.)
   useEffect(() => {
@@ -364,7 +377,7 @@ export function AdminPage() {
 
         <Pagination page={page} pageSize={pageSize} total={filtered.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
         {catalogView === 'grid' ? (
-          <CardGrid cards={paginated} onSelect={handleView} />
+          <CardGrid cards={paginated} onSelect={handleView} page={page} />
         ) : (
           <AdminTable cards={paginated} onEdit={(c) => { setEditing(c); setFormOpen(true) }} onDelete={handleDelete} onSync={handleSync} onView={handleView} syncingId={syncingId} />
         )}
