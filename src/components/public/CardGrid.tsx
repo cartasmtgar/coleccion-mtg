@@ -25,7 +25,7 @@ export function CardGrid({ cards, onSelect, page = 0 }: { cards: (Card & { _tota
                 decoding="async"
                 // @ts-ignore - fetchPriority es válido en img pero no tipado en React 19
                 fetchPriority={idx < 4 ? 'high' : 'auto'}
-                className="h-full w-full object-cover scale-[1.03] transition duration-300 group-hover:scale-[1.06]"
+                className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900 p-6 text-center">
