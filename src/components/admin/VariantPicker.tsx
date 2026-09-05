@@ -3,6 +3,8 @@ import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
 import type { ScryfallCard } from '../../types/scryfall'
 import type { Card } from '../../types/card'
+import { searchScryfallExact } from '../../services/scryfall'
+import { editionToSetCode } from '../../lib/mtg-sets'
 
 interface Props {
   card: Card | null
@@ -20,8 +22,6 @@ export function VariantPicker({ card, open, onClose, onSelect }: Props) {
     const fetchVariants = async () => {
       setLoading(true)
       try {
-        const { searchScryfallExact } = await import('../../services/scryfall')
-        const { editionToSetCode } = await import('../../lib/mtg-sets')
         const base = await searchScryfallExact(card.name_en || card.name_es, card.edition, card.language, card.goldfish_url)
         if (!base) {
           setVariants([])

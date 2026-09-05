@@ -123,25 +123,11 @@ export function AdminPage() {
   }, []) // solo al montar, para links desde dashboard
 
   const handleSync = async (card: Card) => {
-    // Si tiene variante goldfish (A/B/artist), muestra picker manual en vez de auto
+    // Si tiene variante goldfish (A/B/artist), siempre muestra picker manual (goldfish es más fiable que Scryfall para arte)
     const variant = parseGoldfishUrl(card.goldfish_url).variant
     if (variant) {
-      // Verifica si hay múltiples impresiones para ese set (para no mostrar modal innecesario si solo hay 1)
-      try {
-        const base = await searchScryfallExact(card.name_en || card.name_es, card.edition, card.language, null)
-        const printsUri = (base as unknown as { prints_search_uri?: string })?.prints_search_uri
-        if (printsUri) {
-          const r = await fetch(printsUri, { headers: { Accept: 'application/json' } })
-          if (r.ok) {
-            const data = (await r.json()) as { data: ScryfallCard[] }
-            const inSet = data.data.filter(c => !card.edition || c.set.toLowerCase() === (editionToSetCode(card.edition) ?? '').toLowerCase())
-            if (inSet.length > 1) {
-              setVariantPickerCard(card)
-              return
-            }
-          }
-        }
-      } catch {}
+      setVariantPickerCard(card)
+      return
     }
 
     setSyncingId(card.id)
