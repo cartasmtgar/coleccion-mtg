@@ -25,7 +25,7 @@ export function AdminPage() {
   const { cards, refresh } = useCards()
   const { signOut, user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
-  const syncFilter = searchParams.get('sync') as 'synced' | 'pending' | null
+  const syncFilter = searchParams.get('sync') as 'synced' | 'pending' | 'review' | null
   const [catalogView, setCatalogView] = useState<CatalogView>(() => {
     try {
       const v = localStorage.getItem('admin:view') as CatalogView | null
@@ -62,6 +62,7 @@ export function AdminPage() {
     return cards.filter((c) => {
       if (syncFilter === 'synced' && !(c.image_url || c.scryfall_id)) return false
       if (syncFilter === 'pending' && (c.image_url || c.scryfall_id)) return false
+      if (syncFilter === 'review' && !parseGoldfishUrl(c.goldfish_url).variant) return false
       if (filters.search) {
         const q = filters.search.toLowerCase()
         const hay = `${c.name_es} ${c.name_en ?? ''} ${c.type ?? ''}`.toLowerCase()
@@ -346,7 +347,7 @@ export function AdminPage() {
         {syncFilter && (
           <div className="flex items-center gap-2 rounded-xl border border-amber-700/30 bg-amber-950/20 px-3 py-2 text-sm">
             <span className="text-amber-300">
-              Filtrado por: {syncFilter === 'synced' ? 'con imagen' : 'pendientes'} ({filtered.length})
+              Filtrado por: {syncFilter === 'synced' ? 'con imagen' : syncFilter === 'pending' ? 'pendientes' : 'revisar'} ({filtered.length})
             </span>
             <button onClick={() => setSearchParams({})} className="ml-auto text-xs text-zinc-400 hover:text-white underline">
               Limpiar filtro
@@ -367,6 +368,12 @@ export function AdminPage() {
             className={`rounded-full px-3 py-1 text-xs font-medium border ${syncFilter === 'pending' ? 'bg-amber-600 text-white border-amber-500' : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'}`}
           >
             Pendientes
+          </button>
+          <button
+            onClick={() => setSearchParams(syncFilter === 'review' ? {} : { sync: 'review' })}
+            className={`rounded-full px-3 py-1 text-xs font-medium border ${syncFilter === 'review' ? 'bg-violet-600 text-white border-violet-500' : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'}`}
+          >
+            Revisar ({cards.filter(c => parseGoldfishUrl(c.goldfish_url).variant).length})
           </button>
         </div>
 

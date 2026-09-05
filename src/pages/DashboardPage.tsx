@@ -4,6 +4,7 @@ import { Layers, Package, Coins, Image as ImageIcon, Users, Sparkles, ArrowLeft,
 import { useCards } from '../hooks/useCards'
 import { useAuth } from '../context/AuthContext'
 import { formatPrice } from '../lib/utils'
+import { parseGoldfishUrl } from '../lib/mtg-sets'
 
 export function DashboardPage() {
   const { cards } = useCards()
@@ -14,6 +15,7 @@ export function DashboardPage() {
     const totalUnits = cards.reduce((a, c) => a + c.quantity, 0)
     const uniqueGoldfish = new Set(cards.map(c => c.goldfish_url).filter(Boolean)).size
     const synced = cards.filter(c => c.scryfall_id || c.image_url).length
+    const toReview = cards.filter(c => parseGoldfishUrl(c.goldfish_url).variant).length
     const totalValue = cards.reduce((a, c) => a + (c.price_usd ?? 0) * c.quantity, 0)
 
     const byOwner = Object.entries(
@@ -67,7 +69,7 @@ export function DashboardPage() {
 
     const recent = [...cards].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5)
 
-    return { totalUnique, totalUnits, uniqueGoldfish, synced, totalValue, byOwner, byRarity, byLang, byEdition, byType, topExpensive, recent }
+    return { totalUnique, totalUnits, uniqueGoldfish, synced, toReview, totalValue, byOwner, byRarity, byLang, byEdition, byType, topExpensive, recent }
   }, [cards])
 
   const syncPct = stats.totalUnique ? Math.round((stats.synced / stats.totalUnique) * 100) : 0
@@ -163,9 +165,10 @@ export function DashboardPage() {
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
               <Link to="/admin?sync=synced" className="rounded-lg bg-zinc-800 py-2 hover:bg-zinc-700 transition hover:scale-[1.02]"><div className="font-bold text-white">{stats.synced}</div><div className="text-zinc-500">con imagen</div></Link>
               <Link to="/admin?sync=pending" className="rounded-lg bg-zinc-800 py-2 hover:bg-zinc-700 transition hover:scale-[1.02]"><div className="font-bold text-amber-400">{stats.totalUnique - stats.synced}</div><div className="text-zinc-500">pendientes</div></Link>
-              <div className="rounded-lg bg-zinc-800 py-2" title="Variantes = cartas distintas por goldfish_url (misma carta en distinto dueño/idioma cuenta como 1 variante). Total filas 2201 incluye duplicados por owner."><div className="font-bold text-white">{stats.uniqueGoldfish}</div><div className="text-zinc-500">variantes</div></div>
+              <Link to="/admin?sync=review" className="rounded-lg bg-violet-900/30 border border-violet-700/30 py-2 hover:bg-violet-900/40 transition hover:scale-[1.02]"><div className="font-bold text-violet-300">{stats.toReview}</div><div className="text-violet-400">revisar</div></Link>
             </div>
-            <Link to="/admin?sync=pending" className="mt-4 block text-center text-xs text-amber-400 hover:underline">Ver pendientes para sincronizar →</Link>
+            <div className="mt-2 text-center text-xs text-zinc-500" title="Variantes = cartas distintas por goldfish_url">{stats.uniqueGoldfish} variantes totales</div>
+            <Link to="/admin?sync=review" className="mt-1 block text-center text-xs text-violet-400 hover:underline">Ver variantes para revisar →</Link>
           </div>
         </div>
 
