@@ -7,6 +7,7 @@ import { AdminTable } from '../components/admin/AdminTable'
 import { CardForm } from '../components/admin/CardForm'
 import { CardDetail } from '../components/public/CardDetail'
 import { CardGrid } from '../components/public/CardGrid'
+import { VariantPicker } from '../components/admin/VariantPicker'
 import { Modal } from '../components/ui/Modal'
 import { Pagination } from '../components/ui/Pagination'
 import { Select } from '../components/ui/Input'
@@ -42,6 +43,7 @@ export function AdminPage() {
   const [detailCard, setDetailCard] = useState<Card | null>(null)
   const [detailScryfall, setDetailScryfall] = useState<ScryfallCard | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Card | null>(null)
+  const [variantPickerCard, setVariantPickerCard] = useState<Card | null>(null)
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(50)
   const [sortRules, setSortRules] = useState<SortRule<import('../components/admin/AdminTable').AdminSortField>[]>(() => {
@@ -121,6 +123,27 @@ export function AdminPage() {
   }, []) // solo al montar, para links desde dashboard
 
   const handleSync = async (card: Card) => {
+    // Si tiene variante goldfish (A/B/artist), muestra picker manual en vez de auto
+    const variant = parseGoldfishUrl(card.goldfish_url).variant
+    if (variant) {
+      // Verifica si hay múltiples impresiones para ese set (para no mostrar modal innecesario si solo hay 1)
+      try {
+        const base = await searchScryfallExact(card.name_en || card.name_es, card.edition, card.language, null)
+        const printsUri = (base as unknown as { prints_search_uri?: string })?.prints_search_uri
+        if (printsUri) {
+          const r = await fetch(printsUri, { headers: { Accept: 'application/json' } })
+          if (r.ok) {
+            const data = (await r.json()) as { data: ScryfallCard[] }
+            const inSet = data.data.filter(c => !card.edition || c.set.toLowerCase() === (editionToSetCode(card.edition) ?? '').toLowerCase())
+            if (inSet.length > 1) {
+              setVariantPickerCard(card)
+              return
+            }
+          }
+        }
+      } catch {}
+    }
+
     setSyncingId(card.id)
     try {
       // Siempre busca por nombre+edición para corregir ediciones erróneas previas (no usa scryfall_id cacheado)
@@ -130,6 +153,20 @@ export function AdminPage() {
       await refresh()
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Error sincronizando')
+    } finally {
+      setSyncingId(null)
+    }
+  }
+
+  const handleVariantSelect = async (sc: ScryfallCard) => {
+    if (!variantPickerCard) return
+    setVariantPickerCard(null)
+    setSyncingId(variantPickerCard.id)
+    try {
+      await cardsService.syncCardWithScryfall(variantPickerCard, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc) })
+      await refresh()
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Error sincronizando variante')
     } finally {
       setSyncingId(null)
     }
@@ -410,6 +447,7 @@ export function AdminPage() {
 
         <CardForm open={formOpen} onClose={() => { setFormOpen(false); setEditing(null) }} initial={editing} onSave={handleSave} />
         <CardDetail card={detailCard} scryfall={detailScryfall} open={!!detailCard} onClose={() => setDetailCard(null)} />
+        <VariantPicker card={variantPickerCard} open={!!variantPickerCard} onClose={() => setVariantPickerCard(null)} onSelect={handleVariantSelect} />
 
         <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Eliminar carta">
           {deleteTarget && (
