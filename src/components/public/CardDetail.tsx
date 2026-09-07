@@ -1,6 +1,7 @@
-import { ExternalLink, Coins, ScrollText, ShieldCheck } from 'lucide-react'
+import { ExternalLink, Coins, ScrollText, ShieldCheck, Pencil, RefreshCw, Loader2 } from 'lucide-react'
 import { Modal } from '../ui/Modal'
 import { Badge } from '../ui/Badge'
+import { Button } from '../ui/Button'
 import { formatPrice } from '../../lib/utils'
 import type { Card } from '../../types/card'
 import type { ScryfallCard } from '../../types/scryfall'
@@ -10,11 +11,17 @@ export function CardDetail({
   scryfall,
   open,
   onClose,
+  onEdit,
+  onSync,
+  syncing = false,
 }: {
   card: Card | null
   scryfall: ScryfallCard | null
   open: boolean
   onClose: () => void
+  onEdit?: (c: Card) => void
+  onSync?: (c: Card) => void
+  syncing?: boolean
 }) {
   if (!card) return null
 
@@ -54,6 +61,21 @@ export function CardDetail({
             >
               Referencia Goldfish <ExternalLink size={14} />
             </a>
+          )}
+          {(onEdit || onSync) && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {onSync && (
+                <Button variant="secondary" size="sm" onClick={() => onSync(card)} disabled={syncing}>
+                  {syncing ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}
+                  {syncing ? 'Sincronizando...' : 'Sincronizar'}
+                </Button>
+              )}
+              {onEdit && (
+                <Button variant="outline" size="sm" onClick={() => onEdit(card)}>
+                  <Pencil size={15} /> Editar
+                </Button>
+              )}
+            </div>
           )}
         </div>
 

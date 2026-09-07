@@ -1,10 +1,11 @@
+import { Loader2, Pencil, RefreshCw } from 'lucide-react'
 import { Badge } from '../ui/Badge'
 import { formatPrice } from '../../lib/utils'
 import type { Card } from '../../types/card'
 
 type AggregatedCard = Card & { _total?: number; _langs?: Record<string, number> }
 
-export function CardGrid({ cards, onSelect, page = 0 }: { cards: (Card & { _total?: number; _langs?: Record<string, number> })[]; onSelect: (c: Card) => void; page?: number }) {
+export function CardGrid({ cards, onSelect, page = 0, showOwner = false, onSync, syncingId = null, onEdit }: { cards: (Card & { _total?: number; _langs?: Record<string, number> })[]; onSelect: (c: Card) => void; page?: number; showOwner?: boolean; onSync?: (c: Card) => void; syncingId?: string | null; onEdit?: (c: Card) => void }) {
   if (cards.length === 0) {
     return <p className="py-12 text-center text-zinc-500">No se encontraron cartas con los filtros actuales.</p>
   }
@@ -34,7 +35,30 @@ export function CardGrid({ cards, onSelect, page = 0 }: { cards: (Card & { _tota
             )}
           </div>
           <div className="space-y-2 p-3">
-            <h3 className="line-clamp-1 font-semibold text-white">{card.name_en ?? card.name_es}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="line-clamp-1 flex-1 font-semibold text-white">{card.name_en ?? card.name_es}</h3>
+              {onEdit && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onEdit(card) }}
+                  title="Editar carta"
+                  aria-label={`Editar ${card.name_en ?? card.name_es}`}
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-400 transition hover:border-amber-500 hover:text-amber-400"
+                >
+                  <Pencil size={14} />
+                </button>
+              )}
+              {onSync && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onSync(card) }}
+                  disabled={syncingId === card.id}
+                  title="Resincronizar con Scryfall"
+                  aria-label={`Resincronizar ${card.name_en ?? card.name_es}`}
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-400 transition hover:border-amber-500 hover:text-amber-400 disabled:opacity-50"
+                >
+                  {syncingId === card.id ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                </button>
+              )}
+            </div>
             {card.name_es && card.name_en && card.name_en !== card.name_es && (
               <p className="line-clamp-1 text-xs text-zinc-500">{card.name_es}</p>
             )}
@@ -46,6 +70,7 @@ export function CardGrid({ cards, onSelect, page = 0 }: { cards: (Card & { _tota
               )}
               {card.edition && <Badge variant="outline">{card.edition}</Badge>}
               <Badge variant="outline">{(card as AggregatedCard).language}</Badge>
+              {showOwner && card.owner && <Badge variant="outline">{card.owner}</Badge>}
               {(card as AggregatedCard)._langs && Object.keys((card as AggregatedCard)._langs!).length > 1 && (
                 <Badge variant="outline" className="bg-amber-900/20 text-amber-300 border-amber-700/30">
                   {Object.entries((card as AggregatedCard)._langs!).map(([l,q])=>`${l} x${q}`).join(' · ')}
