@@ -39,8 +39,10 @@ export function VariantPicker({ card, open, onClose, onSelect }: Props) {
         }
         const data = (await r.json()) as { data: ScryfallCard[] }
         const expectedSet = editionToSetCode(card.edition)
+        // Regla de oro: solo mostrar impresiones del set del Excel.
+        // Sin fallback a otros sets (evita DKM/WC02/CST/PTC).
         const setFiltered = expectedSet ? data.data.filter(c => c.set.toLowerCase() === expectedSet.toLowerCase()) : data.data
-        const toShow = setFiltered.length > 0 ? setFiltered : data.data
+        const toShow = [...setFiltered].sort((a, b) => a.collector_number.localeCompare(b.collector_number, undefined, { numeric: true }))
         setVariants(toShow.slice(0, 12))
       } catch {
         setVariants([])
@@ -57,7 +59,20 @@ export function VariantPicker({ card, open, onClose, onSelect }: Props) {
     <Modal open={open} onClose={onClose} title={`Elige variante — ${card.name_en ?? card.name_es} (${card.edition})`}>
       <div className="space-y-4">
         <p className="text-sm text-zinc-400">
-          Esta carta tiene varias impresiones con mismo nombre y edición pero distinto arte. El link Goldfish <span className="text-amber-300">{card.goldfish_url?.split('/').pop()?.replace('+',' ')}</span> indica la variante. Elige la correcta:
+          Esta carta tiene varias impresiones con mismo nombre y edición pero distinto arte. El link Goldfish{' '}
+          {card.goldfish_url ? (
+            <a
+              href={card.goldfish_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-amber-300 underline hover:text-amber-200"
+            >
+              {card.goldfish_url.split('/').pop()?.replace(/\+/g, ' ')}
+            </a>
+          ) : (
+            <span className="text-amber-300">sin referencia</span>
+          )}{' '}
+          indica la variante. Elige la correcta:
         </p>
         {loading && <p className="text-sm text-zinc-500">Cargando variantes…</p>}
         {!loading && variants.length === 0 && <p className="text-sm text-zinc-500">No se encontraron variantes.</p>}

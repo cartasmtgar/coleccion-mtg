@@ -34,6 +34,10 @@ const SET_MAP: Record<string, string> = {
   'hml': 'hml',
   'fem': 'fem',
   'wth': 'wth',
+  // Introductory Two-Player Set (caja inicio 1996, marcada como 2PS en Excel)
+  '2ps': 'itp',
+  'itp': 'itp',
+  'introductory two-player set': 'itp',
 }
 
 export function editionToSetCode(edition: string | null | undefined): string | null {
@@ -56,15 +60,46 @@ export function parseGoldfishUrl(url: string | null | undefined): {
     const setName = decodeURIComponent(parts[1].replace(/\+/g, ' '))
     let cardSlug = decodeURIComponent(parts[2].replace(/\+/g, ' '))
     let variant: string | null = null
-    // variantes como "Aesthir Glider-B", "Order of Leitbur-C", "Mangaras Tome"
-    // Goldfish usa suffix "-B", "-C", "-Benson" etc para variantes
+    // variantes como "Aesthir Glider-B", "Order of Leitbur-C", "Homarid-Tedin",
+    // "Urzas Mine-Pulley", "Urzas Power Plant-Bug", "Dwarven Soldier-Asplund-Faith"
+    // OJO: no romper nombres con guión como "Man-o-War", "Will-o-the-Wisp"
+    // ("War"/"Wisp" son parte del nombre) ni "Legions of Lim-Dul".
     const dashIdx = cardSlug.lastIndexOf('-')
     if (dashIdx > 0) {
       const suffix = cardSlug.slice(dashIdx + 1)
-      // solo considerar variante si es corta (1-2 chars o Benson) y no es "paper"/"online" que va en hash
-      if (/^[A-Z0-9]{1,3}$/i.test(suffix) || /^Benson$/i.test(suffix)) {
-        variant = suffix
-        cardSlug = cardSlug.slice(0, dashIdx)
+      const base = cardSlug.slice(0, dashIdx)
+      // 1) Letra de variante A/B/C/D (comunes con varias artes y tierras básicas)
+      if (/^[ABCDabcd]$/.test(suffix)) {
+        variant = suffix.toUpperCase()
+        cardSlug = base
+      } else {
+        // 2) Artista compuesto "Asplund-Faith" (dos tramos capitalizados)
+        const prevDash = base.lastIndexOf('-')
+        if (prevDash > 0) {
+          const compound = cardSlug.slice(prevDash + 1)
+          const compoundBase = cardSlug.slice(0, prevDash)
+          if (/^[A-Z][A-Za-z]{2,19}-[A-Z][A-Za-z]{2,19}$/.test(compound) && !compoundBase.includes('-')) {
+            variant = compound
+            cardSlug = compoundBase
+          }
+        }
+        // 3) Apellido de artista o palabra de arte, solo si la base no tiene
+        // guiones (así "Will-o-the-Wisp" y "Man-o-War" quedan intactos).
+        if (!variant && !base.includes('-')) {
+          const isArtist = /^[A-Za-z]{4,20}$/.test(suffix) && !/^(paper|online)$/i.test(suffix)
+          const isArtWord = /^[A-Z][A-Za-z]{2}$/.test(suffix) // ej "Bug"
+          if (isArtist || isArtWord) {
+            variant = suffix
+            cardSlug = base
+          }
+        }
+        // 4) Variante de arte en varias palabras ("Rock in Pot"): solo si la
+        // base parece un nombre completo (evita "Tin-Wing Chimera" o
+        // "Snow-Covered Island", donde el guión es parte del nombre).
+        if (!variant && /^[A-Z][A-Za-z ]{2,29}$/.test(suffix) && suffix.includes(' ') && base.length > 6 && base.includes(' ')) {
+          variant = suffix
+          cardSlug = base
+        }
       }
     }
     return { setName, cardSlug, variant }
@@ -125,4 +160,60 @@ export function getCanonicalEnglishName(card: { name_en?: string | null; name_es
   if (es) return es
   if (slug) return slug
   return null
+}
+
+/** Extrae el código de set desde un scryfall_uri (.../card/all/13b/...) */
+export function getScryfallSetFromUri(uri: string | null | undefined): string | null {
+  if (!uri) return null
+  const m = uri.match(/\/card\/([^/]+)\//i)
+  return m ? m[1].toLowerCase() : null
+}
+
+/** Extrae el collector_number desde un scryfall_uri (.../card/all/13b/...) */
+export function getScryfallCollectorFromUri(uri: string | null | undefined): string | null {
+  if (!uri) return null
+  const m = uri.match(/\/card\/[^/]+\/([^/]+)\//i)
+  return m ? m[1].toLowerCase() : null
+}
+
+/**
+ * Variantes de arte por dibujo (tierras de Urza en Chronicles): mismo artista
+ * y sin letra en el collector, así que no se pueden resolver automáticamente.
+ * Van a picker manual.
+ */
+const ART_WORD_VARIANTS = new Set(
+  ['Forest', 'Shore', 'Mountains', 'Plains', 'Tower', 'Sphere', 'Mouth', 'Pulley', 'Bug', 'Rock in Pot'].map(s => s.toLowerCase()),
+)
+
+export interface ReviewableCard {
+  goldfish_url?: string | null
+  image_url?: string | null
+  scryfall_id?: string | null
+  scryfall_uri?: string | null
+  edition?: string | null
+  rarity?: string | null
+}
+
+/**
+ * ¿Necesita revisión? Casos:
+ * - Sin imagen (pendiente).
+ * - Set distinto al del Excel, con o sin variante (ej Brown Ouphe en mrd).
+ * - Variante de arte por dibujo (Urza): imposible automático → manual.
+ * - Letra A/B/C/D cuyo collector no termina en esa letra (salvo tierras
+ *   básicas, que comparten número en todas sus artes).
+ * Las variantes ya bien sincronizadas no aparecen.
+ */
+export function needsReview(card: ReviewableCard): boolean {
+  if (!card.image_url && !card.scryfall_id) return true
+  const expected = editionToSetCode(card.edition)
+  const actual = getScryfallSetFromUri(card.scryfall_uri)
+  if (expected && actual && expected.toLowerCase() !== actual) return true
+  const variant = parseGoldfishUrl(card.goldfish_url).variant
+  if (!variant) return false
+  if (ART_WORD_VARIANTS.has(variant.toLowerCase())) return true
+  if (/^[ABCD]$/i.test(variant) && card.rarity !== 'basic') {
+    const collector = getScryfallCollectorFromUri(card.scryfall_uri)
+    if (collector && !collector.endsWith(variant.toLowerCase())) return true
+  }
+  return false
 }

@@ -4,7 +4,7 @@ import { Layers, Package, Coins, Image as ImageIcon, Users, Sparkles, ArrowLeft,
 import { useCards } from '../hooks/useCards'
 import { useAuth } from '../context/AuthContext'
 import { formatPrice } from '../lib/utils'
-import { parseGoldfishUrl } from '../lib/mtg-sets'
+import { needsReview } from '../lib/mtg-sets'
 
 export function DashboardPage() {
   const { cards } = useCards()
@@ -15,7 +15,7 @@ export function DashboardPage() {
     const totalUnits = cards.reduce((a, c) => a + c.quantity, 0)
     const uniqueGoldfish = new Set(cards.map(c => c.goldfish_url).filter(Boolean)).size
     const synced = cards.filter(c => c.scryfall_id || c.image_url).length
-    const toReview = cards.filter(c => parseGoldfishUrl(c.goldfish_url).variant).length
+    const toReview = cards.filter(c => needsReview(c)).length
     const totalValue = cards.reduce((a, c) => a + (c.price_usd ?? 0) * c.quantity, 0)
 
     const byOwner = Object.entries(

@@ -10,6 +10,28 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ### Added
 - `ROADMAP.md` como fuente única de tareas pendientes/ideas/pospuestas con regla de actualización continua.
 - `dev.bat` para iniciar servidor local con doble click y apertura automática del navegador.
+- Mapa `2PS` → `itp` (Introductory Two-Player Set) en `src/lib/mtg-sets.ts`.
+
+### Fixed
+- Sync Scryfall respeta la edición del Excel: la variante `-A/-B`/artista se resuelve solo dentro del set esperado (`src/services/scryfall.ts`). Elimina el fallback a otros sets que mandaba `Reprisal-B` a `wc02`, `Phyrexian War Beast-B` a `dkm`, `Torture-A` a `ptc` y `Casting of Bones-B`/`Lat-Nam's Legacy` a `cst`. Si no se encuentra el arte exacto, la carta queda pendiente en vez de guardar una versión incorrecta.
+- `src/pages/AdminPage.tsx` (bulk) verifica el `set` antes de guardar; `src/components/admin/VariantPicker.tsx` filtra estrictamente por set y ordena por `collector_number`.
+- `parseGoldfishUrl` acepta apellidos de artista (`Tedin`, `Hudson`, etc.) sin romper nombres con guión como `Man-o-War` o `Will-o'-the-Wisp`.
+- Detección de variantes completa: letra `D` (tierras básicas y comunes con 4 artes), artista compuesto (`Dwarven Soldier-Asplund-Faith`) y palabra de arte (`Urzas Power Plant-Bug`). 387 variantes detectadas sobre 2201.
+
+### Changed
+- Filtro `Revisar` (`sync=review`) ahora muestra solo variantes **pendientes**: con variante Goldfish y (sin imagen o con set distinto al del Excel). Las variantes ya bien sincronizadas no aparecen, así el número baja a medida que se corrigen. Vale para el botón en `/admin` y el KPI del dashboard (`needsReview` en `src/lib/mtg-sets.ts`).
+- `resolveVariantIfNeeded`: variante de una letra sin match por `collector_number` queda pendiente en vez de adivinar por artista.
+- Detección de variante multi-palabra (`Urzas Power Plant-Rock in Pot`) con guardias (no rompe `Tin-Wing Chimera` ni `Snow-Covered Island`).
+- Grid del admin: botón de resync en cada carta (abre picker si tiene variante).
+- Grid del admin: botón de editar al lado del resync (abre el formulario).
+- Modal de detalle en admin: botones Sincronizar y Editar.
+- Picker de variantes: link Goldfish clickeable en nueva pestaña.
+
+### Changed
+- `needsReview` v2: flag sin imagen, **cualquier** set distinto al del Excel (con o sin variante, ej `Brown Ouphe` en `mrd`), artes por dibujo de Urza (manual obligado) y letra cuyo collector no termina en ella (salvo básicas, que comparten número). Sobre datos actuales detecta 63 (2 + 13 + 48).
+
+### Removed
+- Scripts de fix puntuales que no funcionaron (`scripts/fix-*.mjs`, `scripts/generate-fix-all.mjs`) y SQL generados (`supabase/fix_324.sql`, `supabase/fix_AB.sql`).
 
 ### Changed
 - `AGENTS.md` — workflow ahora exige actualizar `ROADMAP.md` junto a `CHANGELOG.md`.

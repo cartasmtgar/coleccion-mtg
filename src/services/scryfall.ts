@@ -44,6 +44,9 @@ export async function searchScryfallExact(
   _lang: string | null,
   _goldfishUrl: string | null,
 ): Promise<ScryfallCard | null> {
+  // Regla de oro: la edición del Excel manda. Si se conoce el set, nunca
+  // devolver una carta de otro set (DKM/WC02/CST/PTC). Mejor null (pendiente).
+  const expectedSet = editionToSetCode(edition)
   // Usa helper canónico para cubrir filas con columnas invertidas y sufijos de artista
   const canonicalFromGold = getCanonicalEnglishName({ name_en: name, name_es: null, goldfish_url: _goldfishUrl })
   let goldSlug = parseGoldfishUrl(_goldfishUrl).cardSlug
@@ -58,15 +61,23 @@ export async function searchScryfallExact(
   for (const candidate of uniqueCandidates) {
     const result = await searchScryfallExactSingle(candidate, edition)
     if (result) {
-      // Si hay variante goldfish (A/B o artista), intentar resolver a la impresión exacta
-      const variantCard = await resolveVariantIfNeeded(result, _goldfishUrl)
+      // Si el resultado no es del set esperado, descartar (no contaminar con otro set)
+      if (expectedSet && result.set.toLowerCase() !== expectedSet.toLowerCase()) {
+        continue
+      }
+      // Si hay variante goldfish (A/B o artista), resolver dentro del set esperado
+      const variantCard = await resolveVariantIfNeeded(result, _goldfishUrl, expectedSet)
       return variantCard ?? result
     }
   }
   return null
 }
 
-async function resolveVariantIfNeeded(card: ScryfallCard, goldfishUrl: string | null): Promise<ScryfallCard | null> {
+async function resolveVariantIfNeeded(
+  card: ScryfallCard,
+  goldfishUrl: string | null,
+  expectedSet: string | null,
+): Promise<ScryfallCard | null> {
   const gold = parseGoldfishUrl(goldfishUrl)
   const variant = gold.variant
   if (!variant) return null
@@ -79,19 +90,30 @@ async function resolveVariantIfNeeded(card: ScryfallCard, goldfishUrl: string | 
     if (res.status === 429) {
       const retry = Number(res.headers.get('Retry-After') ?? '1') * 1000
       await new Promise(r => setTimeout(r, retry))
-      return resolveVariantIfNeeded(card, goldfishUrl)
+      return resolveVariantIfNeeded(card, goldfishUrl, expectedSet)
     }
     if (!res.ok) return null
     const data = (await res.json()) as { data: ScryfallCard[] }
-    // Buscar por collector_number con sufijo A/B o por artista
+    // FIX patrón Reprisal-B -> wc02: filtrar SIEMPRE por el set esperado ANTES
+    // de buscar la variante. prints_search viene ordenado de nuevo a viejo,
+    // así que buscar global encontraba DKM/WC02/CST/PTC antes que all/hml.
+    const setFiltered = expectedSet
+      ? data.data.filter(c => c.set.toLowerCase() === expectedSet.toLowerCase())
+      : data.data
+    // Si el set esperado no tiene impresiones, no inventar: dejar pendiente.
+    if (expectedSet && setFiltered.length === 0) return null
+    const pool = setFiltered.length > 0 ? setFiltered : data.data
+    // Buscar por collector_number con sufijo A/B/C/D o por artista (solo dentro del set)
     const variantLower = variant.toLowerCase()
-    // Caso 1: variante corta A/B/C -> collector_number termina en a/b/c
-    if (/^[a-c]$/i.test(variant)) {
-      const found = data.data.find(c => c.collector_number.toLowerCase().endsWith(variantLower))
-      if (found) return found
+    // Caso 1: variante de una letra -> solo vale match por collector_number.
+    // Si no hay (ej tierras básicas con mismo número), devolver pendiente
+    // en vez de adivinar por artista (la letra aparece en cualquier nombre).
+    if (/^[a-d]$/i.test(variant)) {
+      const found = pool.find(c => c.collector_number.toLowerCase().endsWith(variantLower))
+      return found ?? null
     }
-    // Caso 2: artista (ej Tedin, Menges, Benson)
-    const byArtist = data.data.find(c => {
+    // Caso 2: artista (ej Tedin, Hudson, Menges, Benson)
+    const byArtist = pool.find(c => {
       const artist = (c as unknown as { artist?: string }).artist
       return artist && artist.toLowerCase().includes(variantLower)
     })
@@ -118,7 +140,9 @@ async function searchScryfallExactSingle(
     const url = `${SCRYFALL_BASE}/cards/named?exact=${encodeURIComponent(normalized)}&set=${encodeURIComponent(set)}`
     const res = await fetch(url)
     if (res.status === 404) {
-      // fallback a search sin set
+      // Regla de oro: si la edición es conocida y no está en ese set,
+      // NO caer a otros sets (evita DKM/WC02/CST/PTC). Dejar pendiente.
+      return null
     } else if (res.status === 429) {
       const retry = Number(res.headers.get('Retry-After') ?? '1') * 1000
       await new Promise((r) => setTimeout(r, retry))

@@ -17,7 +17,7 @@ import { DEFAULT_FILTERS, type CardFilters, type CatalogView } from '../types/fi
 import type { Card } from '../types/card'
 import type { ScryfallCard } from '../types/scryfall'
 import { fetchByScryfallId, searchScryfallExact, bulkFetchCollection, getScryfallImage, getScryfallPrice } from '../services/scryfall'
-import { editionToSetCode, getCanonicalEnglishName, normalizeForCompare, parseGoldfishUrl } from '../lib/mtg-sets'
+import { editionToSetCode, getCanonicalEnglishName, normalizeForCompare, parseGoldfishUrl, needsReview } from '../lib/mtg-sets'
 import { applySort, removeRule, toggleDir, type SortRule } from '../lib/sort'
 import * as cardsService from '../services/cards.service'
 
@@ -62,7 +62,7 @@ export function AdminPage() {
     return cards.filter((c) => {
       if (syncFilter === 'synced' && !(c.image_url || c.scryfall_id)) return false
       if (syncFilter === 'pending' && (c.image_url || c.scryfall_id)) return false
-      if (syncFilter === 'review' && !parseGoldfishUrl(c.goldfish_url).variant) return false
+      if (syncFilter === 'review' && !needsReview(c)) return false
       if (filters.search) {
         const q = filters.search.toLowerCase()
         const hay = `${c.name_es} ${c.name_en ?? ''} ${c.type ?? ''}`.toLowerCase()
@@ -221,6 +221,16 @@ export function AdminPage() {
           const cardsForKey = keyToCards.get(nameKey) ?? []
           if (sc) {
             for (const card of cardsForKey) {
+              // Regla de oro: nunca guardar otro set (evita DKM/WC02/CST/PTC).
+              const expected = editionToSetCode(card.edition)
+              if (expected && sc.set.toLowerCase() !== expected.toLowerCase()) {
+                try {
+                  const sc2 = await searchScryfallExact(card.name_en || card.name_es, card.edition, card.language, card.goldfish_url)
+                  if (sc2) await cardsService.syncCardWithScryfall(card, { id: sc2.id, uri: sc2.scryfall_uri, image: getScryfallImage(sc2), price: getScryfallPrice(sc2) })
+                } catch {}
+                setSyncProgress(p => (p ? { done: p.done + 1, total: p.total } : p))
+                continue
+              }
               setSyncingId(card.id)
               await cardsService.syncCardWithScryfall(card, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc) })
               setSyncProgress(p => (p ? { done: p.done + 1, total: p.total } : p))
@@ -373,7 +383,7 @@ export function AdminPage() {
             onClick={() => setSearchParams(syncFilter === 'review' ? {} : { sync: 'review' })}
             className={`rounded-full px-3 py-1 text-xs font-medium border ${syncFilter === 'review' ? 'bg-violet-600 text-white border-violet-500' : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'}`}
           >
-            Revisar ({cards.filter(c => parseGoldfishUrl(c.goldfish_url).variant).length})
+            Revisar ({cards.filter(c => needsReview(c)).length})
           </button>
         </div>
 
@@ -432,14 +442,22 @@ export function AdminPage() {
 
         <Pagination page={page} pageSize={pageSize} total={filtered.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
         {catalogView === 'grid' ? (
-          <CardGrid cards={paginated} onSelect={handleView} page={page} />
+          <CardGrid cards={paginated} onSelect={handleView} page={page} showOwner onSync={handleSync} syncingId={syncingId} onEdit={(c) => { setEditing(c); setFormOpen(true) }} />
         ) : (
           <AdminTable cards={paginated} onEdit={(c) => { setEditing(c); setFormOpen(true) }} onDelete={handleDelete} onSync={handleSync} onView={handleView} syncingId={syncingId} />
         )}
         <Pagination page={page} pageSize={pageSize} total={filtered.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
 
         <CardForm open={formOpen} onClose={() => { setFormOpen(false); setEditing(null) }} initial={editing} onSave={handleSave} />
-        <CardDetail card={detailCard} scryfall={detailScryfall} open={!!detailCard} onClose={() => setDetailCard(null)} />
+        <CardDetail
+          card={detailCard}
+          scryfall={detailScryfall}
+          open={!!detailCard}
+          onClose={() => setDetailCard(null)}
+          onSync={(c) => { setDetailCard(null); void handleSync(c) }}
+          syncing={!!detailCard && syncingId === detailCard.id}
+          onEdit={(c) => { setDetailCard(null); setEditing(c); setFormOpen(true) }}
+        />
         <VariantPicker card={variantPickerCard} open={!!variantPickerCard} onClose={() => setVariantPickerCard(null)} onSelect={handleVariantSelect} />
 
         <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Eliminar carta">
