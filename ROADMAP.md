@@ -14,7 +14,8 @@
 - [x] **Revisar = solo pendientes** (`needsReview`): variante + (sin imagen o set incorrecto). El número baja a medida que se corrigen.
 - [x] **Sin adivinanzas:** letra sola sin match de `collector_number` queda pendiente.
 - [x] **needsReview v2 (verificado con datos reales 2026-09-07):** flag cualquier set-mismatch (detectó `Brown Ouphe` en `mrd` y `Fountain of Youth` en `10e`, ambos errores de edición en Excel), artes Urza (13 filas a picker manual) y letra vs collector salvo básicas (48 filas stale que el re-sync corrige solo). Total actual: 63 → ~13 tras re-sync + fixes.
-- [ ] **Pendiente usuario:** (1) reiniciar server + Ctrl+Shift+R, verificar `Con imagen` muestra 2201; (2) confirmar 2 fixes de edición y 13 conflictos Excel-vs-Goldfish (ver CHANGELOG/issue); (3) `Sincronizar todo`; (4) picker manual para las 13 Urza.
+- [x] **Marcar revisada:** columna `reviewed` + botón en modal + auto-marca en picker (art-words) + reset en sync/form. Query pendiente usuario ↓.
+- [ ] **Pendiente usuario:** (1) correr migración `alter table ... reviewed ...`; (2) reiniciar server + Ctrl+Shift+R, verificar `Con imagen` muestra 2201; (3) confirmar 2 fixes de edición y 13 conflictos Excel-vs-Goldfish; (4) `Sincronizar todo`; (5) picker manual para las 13 Urza (quedan marcadas y salen de Revisar).
 
 ## Estado actual — v0.1.0 (completado)
 - [x] Scaffolding Vite 6 + React 19 + TypeScript 6 (strict) + Tailwind 4 + lucide-react

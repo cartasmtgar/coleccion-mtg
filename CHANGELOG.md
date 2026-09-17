@@ -22,10 +22,16 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Filtro `Revisar` (`sync=review`) ahora muestra solo variantes **pendientes**: con variante Goldfish y (sin imagen o con set distinto al del Excel). Las variantes ya bien sincronizadas no aparecen, así el número baja a medida que se corrigen. Vale para el botón en `/admin` y el KPI del dashboard (`needsReview` en `src/lib/mtg-sets.ts`).
 - `resolveVariantIfNeeded`: variante de una letra sin match por `collector_number` queda pendiente en vez de adivinar por artista.
 - Detección de variante multi-palabra (`Urzas Power Plant-Rock in Pot`) con guardias (no rompe `Tin-Wing Chimera` ni `Snow-Covered Island`).
+- Prints filtradas por set en el servidor (`oracleid + e:set`): `prints_search_uri` pagina de a 175 (nuevo a viejo) y para cartas viejas con muchas impresiones (básicas, staples) la primera página no traía el set → picker vacío y variantes no resueltas. Vale para sync y picker.
+- Verificado con el usuario que `A/B/C/D` de básicas NO equivale al orden de collector (ej. `Forest-A` Ice Age ≠ `380`): las ~105 básicas entran en Revisar y se resuelven a mano con el picker (elegir arte en básica marca revisada sola).
 - Grid del admin: botón de resync en cada carta (abre picker si tiene variante).
 - Grid del admin: botón de editar al lado del resync (abre el formulario).
 - Modal de detalle en admin: botones Sincronizar y Editar.
+- Grid del admin: icono marcar revisada (gris con guión / verde con tilde).
+- Filtro Revisada (Check / Sin revisar) en admin reemplaza al filtro Tipo (sin uso).
+- Tabla del admin: icono marcar revisada en Acciones.
 - Picker de variantes: link Goldfish clickeable en nueva pestaña.
+- `reviewed boolean` en `cards` (migración idempotente en `schema.sql`): botón "Marcar revisada" en el modal del admin; elegir arte en el picker marca revisada (solo art-words Urza); el sync resetea la marca si cambia el arte y el formulario si cambia edición/goldfish.
 
 ### Changed
 - `needsReview` v2: flag sin imagen, **cualquier** set distinto al del Excel (con o sin variante, ej `Brown Ouphe` en `mrd`), artes por dibujo de Urza (manual obligado) y letra cuyo collector no termina en ella (salvo básicas, que comparten número). Sobre datos actuales detecta 63 (2 + 13 + 48).
