@@ -30,6 +30,7 @@ export function CardForm({ open, onClose, onSave, initial }: Props) {
     scryfall_uri: initial?.scryfall_uri ?? '',
     image_url: initial?.image_url ?? '',
     goldfish_url: initial?.goldfish_url ?? '',
+    reviewed: initial?.reviewed ?? false,
   }))
 
   const key = initial?.id ?? 'new'
@@ -53,6 +54,7 @@ export function CardForm({ open, onClose, onSave, initial }: Props) {
         scryfall_uri: initial?.scryfall_uri ?? '',
         image_url: initial?.image_url ?? '',
         goldfish_url: initial?.goldfish_url ?? '',
+        reviewed: initial?.reviewed ?? false,
       })
     }
   }, [open, initial])

@@ -20,6 +20,7 @@ export interface Card {
   scryfall_uri: string | null
   image_url: string | null
   goldfish_url: string | null
+  reviewed: boolean
   created_at: string
   updated_at?: string
 }

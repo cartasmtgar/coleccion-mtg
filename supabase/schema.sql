@@ -26,12 +26,14 @@ create table if not exists public.cards (
   scryfall_uri text,
   image_url text,
   goldfish_url text,
+  reviewed boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 -- Migración para instalaciones previas (idempotente)
 alter table public.cards add column if not exists goldfish_url text;
+alter table public.cards add column if not exists reviewed boolean not null default false;
 alter table public.cards alter column condition drop not null;
 alter table public.cards alter column condition drop default;
 -- Nota: el check de rarity con 'basic' se aplica solo en creación; para tablas existentes recrear check si es necesario:

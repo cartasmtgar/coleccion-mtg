@@ -28,17 +28,23 @@ export function VariantPicker({ card, open, onClose, onSelect }: Props) {
           return
         }
         const printsUri = (base as unknown as { prints_search_uri?: string }).prints_search_uri
-        if (!printsUri) {
+        const oracleId = (base as unknown as { oracle_id?: string }).oracle_id
+        const expectedSet = editionToSetCode(card.edition)
+        // Filtro por set en el SERVIDOR (ver scryfall.ts): prints_search_uri
+        // pagina de a 175 y para cartas viejas la primera página no trae el set.
+        const url = oracleId && expectedSet
+          ? `https://api.scryfall.com/cards/search?q=${encodeURIComponent(`oracleid:${oracleId} e:${expectedSet}`)}&unique=prints`
+          : printsUri
+        if (!url) {
           setVariants([base])
           return
         }
-        const r = await fetch(printsUri, { headers: { Accept: 'application/json' } })
+        const r = await fetch(url, { headers: { Accept: 'application/json' } })
         if (!r.ok) {
           setVariants([base])
           return
         }
         const data = (await r.json()) as { data: ScryfallCard[] }
-        const expectedSet = editionToSetCode(card.edition)
         // Regla de oro: solo mostrar impresiones del set del Excel.
         // Sin fallback a otros sets (evita DKM/WC02/CST/PTC).
         const setFiltered = expectedSet ? data.data.filter(c => c.set.toLowerCase() === expectedSet.toLowerCase()) : data.data

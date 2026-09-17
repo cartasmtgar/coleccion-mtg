@@ -17,7 +17,7 @@ import { DEFAULT_FILTERS, type CardFilters, type CatalogView } from '../types/fi
 import type { Card } from '../types/card'
 import type { ScryfallCard } from '../types/scryfall'
 import { fetchByScryfallId, searchScryfallExact, bulkFetchCollection, getScryfallImage, getScryfallPrice } from '../services/scryfall'
-import { editionToSetCode, getCanonicalEnglishName, normalizeForCompare, parseGoldfishUrl, needsReview } from '../lib/mtg-sets'
+import { editionToSetCode, getCanonicalEnglishName, normalizeForCompare, parseGoldfishUrl, needsReview, isArtWordVariant } from '../lib/mtg-sets'
 import { applySort, removeRule, toggleDir, type SortRule } from '../lib/sort'
 import * as cardsService from '../services/cards.service'
 
@@ -74,7 +74,8 @@ export function AdminPage() {
       if (filters.color && c.type !== filters.color) return false
       if (filters.condition && c.condition !== filters.condition) return false
       if (filters.owner && c.owner !== filters.owner) return false
-      if (filters.type && c.type && !c.type.toLowerCase().includes(filters.type.toLowerCase())) return false
+      if (filters.reviewed === 'yes' && !c.reviewed) return false
+      if (filters.reviewed === 'no' && c.reviewed) return false
       return true
     })
   }, [cards, filters, syncFilter])
@@ -108,16 +109,14 @@ export function AdminPage() {
     const rarity = searchParams.get('rarity')
     const language = searchParams.get('language')
     const edition = searchParams.get('edition')
-    const type = searchParams.get('type')
     const color = searchParams.get('color')
-    if (owner || rarity || language || edition || type || color) {
+    if (owner || rarity || language || edition || color) {
       setFilters(f => ({
         ...f,
         owner: owner ?? f.owner,
         rarity: rarity ?? f.rarity,
         language: language ?? f.language,
         edition: edition ?? f.edition,
-        type: type ?? f.type,
         color: color ?? f.color,
       }))
     }
@@ -147,10 +146,17 @@ export function AdminPage() {
 
   const handleVariantSelect = async (sc: ScryfallCard) => {
     if (!variantPickerCard) return
+    const picked = variantPickerCard
+    const variant = parseGoldfishUrl(picked.goldfish_url).variant
     setVariantPickerCard(null)
-    setSyncingId(variantPickerCard.id)
+    setSyncingId(picked.id)
     try {
-      await cardsService.syncCardWithScryfall(variantPickerCard, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc) })
+      await cardsService.syncCardWithScryfall(picked, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc) })
+      // Arte por dibujo (Urza) o básica: la elección manual es la única
+      // verificación posible → marcar revisada para que salga de la lista
+      if (isArtWordVariant(variant) || picked.rarity === 'basic') {
+        await cardsService.updateCard(picked.id, { reviewed: true })
+      }
       await refresh()
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Error sincronizando variante')
@@ -269,10 +275,20 @@ export function AdminPage() {
   }
 
   const handleSave = async (payload: Omit<Card, 'id' | 'created_at'>) => {
-    if (editing) await cardsService.updateCard(editing.id, payload)
+    if (editing) {
+      // Si cambió edición o goldfish, la revisión previa ya no vale
+      const changedSource = payload.edition !== editing.edition || payload.goldfish_url !== editing.goldfish_url
+      await cardsService.updateCard(editing.id, changedSource ? { ...payload, reviewed: false } : payload)
+    }
     else await cardsService.createCard(payload)
     await refresh()
     setEditing(null)
+  }
+
+  const handleToggleReviewed = async (card: Card) => {
+    const updated = await cardsService.updateCard(card.id, { reviewed: !card.reviewed })
+    if (detailCard && detailCard.id === card.id) setDetailCard(updated)
+    await refresh()
   }
 
   const handleDelete = (id: string) => {
@@ -387,7 +403,7 @@ export function AdminPage() {
           </button>
         </div>
 
-        <SearchFilters filters={filters} onChange={(p) => setFilters((f) => ({ ...f, ...p }))} view={catalogView} onViewChange={setCatalogView} editions={editions} owners={owners} />
+        <SearchFilters filters={filters} onChange={(p) => setFilters((f) => ({ ...f, ...p }))} view={catalogView} onViewChange={setCatalogView} editions={editions} owners={owners} showReviewedFilter />
 
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 px-2 py-2">
           <span className="text-xs font-medium text-zinc-400">Ordenar por (máx 3):</span>
@@ -442,9 +458,9 @@ export function AdminPage() {
 
         <Pagination page={page} pageSize={pageSize} total={filtered.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
         {catalogView === 'grid' ? (
-          <CardGrid cards={paginated} onSelect={handleView} page={page} showOwner onSync={handleSync} syncingId={syncingId} onEdit={(c) => { setEditing(c); setFormOpen(true) }} />
+          <CardGrid cards={paginated} onSelect={handleView} page={page} showOwner onSync={handleSync} syncingId={syncingId} onEdit={(c) => { setEditing(c); setFormOpen(true) }} onToggleReviewed={handleToggleReviewed} />
         ) : (
-          <AdminTable cards={paginated} onEdit={(c) => { setEditing(c); setFormOpen(true) }} onDelete={handleDelete} onSync={handleSync} onView={handleView} syncingId={syncingId} />
+          <AdminTable cards={paginated} onEdit={(c) => { setEditing(c); setFormOpen(true) }} onDelete={handleDelete} onSync={handleSync} onView={handleView} syncingId={syncingId} onToggleReviewed={handleToggleReviewed} />
         )}
         <Pagination page={page} pageSize={pageSize} total={filtered.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
 
@@ -457,6 +473,7 @@ export function AdminPage() {
           onSync={(c) => { setDetailCard(null); void handleSync(c) }}
           syncing={!!detailCard && syncingId === detailCard.id}
           onEdit={(c) => { setDetailCard(null); setEditing(c); setFormOpen(true) }}
+          onToggleReviewed={handleToggleReviewed}
         />
         <VariantPicker card={variantPickerCard} open={!!variantPickerCard} onClose={() => setVariantPickerCard(null)} onSelect={handleVariantSelect} />
 

@@ -185,6 +185,12 @@ const ART_WORD_VARIANTS = new Set(
   ['Forest', 'Shore', 'Mountains', 'Plains', 'Tower', 'Sphere', 'Mouth', 'Pulley', 'Bug', 'Rock in Pot'].map(s => s.toLowerCase()),
 )
 
+/** ¿La variante es de arte por dibujo (tierras de Urza)? No resoluble automáticamente. */
+export function isArtWordVariant(variant: string | null | undefined): boolean {
+  if (!variant) return false
+  return ART_WORD_VARIANTS.has(variant.toLowerCase())
+}
+
 export interface ReviewableCard {
   goldfish_url?: string | null
   image_url?: string | null
@@ -192,6 +198,7 @@ export interface ReviewableCard {
   scryfall_uri?: string | null
   edition?: string | null
   rarity?: string | null
+  reviewed?: boolean | null
 }
 
 /**
@@ -204,6 +211,9 @@ export interface ReviewableCard {
  * Las variantes ya bien sincronizadas no aparecen.
  */
 export function needsReview(card: ReviewableCard): boolean {
+  // Marcada como revisada a mano: no molestar más (salvo que el arte cambie,
+  // en cuyo caso el sync resetea la marca)
+  if (card.reviewed) return false
   if (!card.image_url && !card.scryfall_id) return true
   const expected = editionToSetCode(card.edition)
   const actual = getScryfallSetFromUri(card.scryfall_uri)
@@ -211,7 +221,9 @@ export function needsReview(card: ReviewableCard): boolean {
   const variant = parseGoldfishUrl(card.goldfish_url).variant
   if (!variant) return false
   if (ART_WORD_VARIANTS.has(variant.toLowerCase())) return true
-  if (/^[ABCD]$/i.test(variant) && card.rarity !== 'basic') {
+  // Letra A/B/C/D: el collector debe terminar en esa letra. Las básicas
+  // comparten número entre artes, así que entran en Revisar hasta marcarlas.
+  if (/^[ABCD]$/i.test(variant)) {
     const collector = getScryfallCollectorFromUri(card.scryfall_uri)
     if (collector && !collector.endsWith(variant.toLowerCase())) return true
   }

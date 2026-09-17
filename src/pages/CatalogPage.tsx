@@ -57,7 +57,6 @@ export function CatalogPage() {
       if (filters.color && c.type !== filters.color) return false
       if (filters.condition && c.condition !== filters.condition) return false
       if (filters.owner && c.owner !== filters.owner) return false
-      if (filters.type && c.type && !c.type.toLowerCase().includes(filters.type.toLowerCase())) return false
       return true
     })
   }, [cards, filters])

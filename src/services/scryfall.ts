@@ -81,12 +81,19 @@ async function resolveVariantIfNeeded(
   const gold = parseGoldfishUrl(goldfishUrl)
   const variant = gold.variant
   if (!variant) return null
-  // Solo intentar si hay variant y card tiene prints_search_uri
-  const printsUri = (card as unknown as { prints_search_uri?: string }).prints_search_uri
-  if (!printsUri) return null
+  // Prints filtradas por set en el SERVIDOR (oracleid + e:set).
+  // prints_search_uri pagina de a 175 (nuevo a viejo): para cartas viejas con
+  // muchísimas impresiones (básicas, staples) la primera página no trae ninguna
+  // del set esperado y el filtro local quedaba vacío.
+  const oracleId = (card as unknown as { oracle_id?: string }).oracle_id
+  const printsUrl = oracleId && expectedSet
+    ? `${SCRYFALL_BASE}/cards/search?q=${encodeURIComponent(`oracleid:${oracleId} e:${expectedSet}`)}&unique=prints`
+    : (card as unknown as { prints_search_uri?: string }).prints_search_uri
+  // Solo intentar si hay variant y hay URL de prints
+  if (!printsUrl) return null
   try {
     await throttle()
-    const res = await fetch(printsUri, { headers: { Accept: 'application/json' } })
+    const res = await fetch(printsUrl, { headers: { Accept: 'application/json' } })
     if (res.status === 429) {
       const retry = Number(res.headers.get('Retry-After') ?? '1') * 1000
       await new Promise(r => setTimeout(r, retry))

@@ -231,9 +231,9 @@ export function DashboardPage() {
             <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white"><Boxes size={16} className="text-teal-400" /> Por tipo / color</h3>
             <div className="flex flex-wrap gap-2">
               {stats.byType.map(([type, qty]) => (
-                <Link key={type} to={`/admin?type=${encodeURIComponent(type)}`} className="rounded-full border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs hover:bg-zinc-700 hover:border-zinc-600 transition">
+                <span key={type} className="rounded-full border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs">
                   <span className="text-zinc-400">{type}</span> <span className="font-bold text-white">{qty}</span>
-                </Link>
+                </span>
               ))}
             </div>
           </div>
