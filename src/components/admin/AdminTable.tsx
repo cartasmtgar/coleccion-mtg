@@ -1,4 +1,4 @@
-import { Pencil, Trash2, RefreshCw, Loader2, Eye } from 'lucide-react'
+import { Pencil, Trash2, RefreshCw, Loader2, Eye, Check, Minus } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { formatPrice } from '../../lib/utils'
 import type { Card } from '../../types/card'
@@ -13,9 +13,10 @@ interface Props {
   onSync: (c: Card) => void
   onView: (c: Card) => void
   syncingId: string | null
+  onToggleReviewed?: (c: Card) => void
 }
 
-export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId }: Props) {
+export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId, onToggleReviewed }: Props) {
   if (cards.length === 0) {
     return <p className="py-10 text-center text-zinc-500">Sin cartas. Agrega la primera.</p>
   }
@@ -48,6 +49,18 @@ export function AdminTable({ cards, onEdit, onDelete, onSync, onView, syncingId 
               <td className="px-3 py-3 text-right text-amber-400">{formatPrice(c.price_usd)}</td>
               <td className="px-3 py-3">
                 <div className="flex justify-end gap-1">
+                  {onToggleReviewed && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => { e.stopPropagation(); onToggleReviewed(c) }}
+                      aria-label={`${c.reviewed ? 'Check' : 'Sin revisar'}: ${c.name_en ?? c.name_es}`}
+                      title={c.reviewed ? 'Check' : 'Sin revisar'}
+                      className={`h-9 w-9 p-0 ${c.reviewed ? '!text-emerald-400 hover:!text-emerald-300 hover:bg-emerald-950/30' : '!text-zinc-500 hover:!text-zinc-300'}`}
+                    >
+                      {c.reviewed ? <Check size={20} /> : <Minus size={20} />}
+                    </Button>
+                  )}
                   <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onView(c) }} aria-label="Ver detalle" title="Ver detalle" className="h-9 w-9 p-0">
                     <Eye size={20} />
                   </Button>

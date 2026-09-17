@@ -1,4 +1,4 @@
-import { ExternalLink, Coins, ScrollText, ShieldCheck, Pencil, RefreshCw, Loader2 } from 'lucide-react'
+import { ExternalLink, Coins, ScrollText, ShieldCheck, Pencil, RefreshCw, Loader2, Check } from 'lucide-react'
 import { Modal } from '../ui/Modal'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
@@ -14,6 +14,7 @@ export function CardDetail({
   onEdit,
   onSync,
   syncing = false,
+  onToggleReviewed,
 }: {
   card: Card | null
   scryfall: ScryfallCard | null
@@ -22,6 +23,7 @@ export function CardDetail({
   onEdit?: (c: Card) => void
   onSync?: (c: Card) => void
   syncing?: boolean
+  onToggleReviewed?: (c: Card) => void
 }) {
   if (!card) return null
 
@@ -73,6 +75,11 @@ export function CardDetail({
               {onEdit && (
                 <Button variant="outline" size="sm" onClick={() => onEdit(card)}>
                   <Pencil size={15} /> Editar
+                </Button>
+              )}
+              {onToggleReviewed && (
+                <Button variant={card.reviewed ? 'ghost' : 'outline'} size="sm" onClick={() => onToggleReviewed(card)}>
+                  <Check size={15} /> {card.reviewed ? 'Revisada (quitar marca)' : 'Marcar revisada'}
                 </Button>
               )}
             </div>

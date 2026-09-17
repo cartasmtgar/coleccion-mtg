@@ -11,9 +11,10 @@ interface Props {
   editions: string[]
   owners: string[]
   hideOwner?: boolean
+  showReviewedFilter?: boolean
 }
 
-export function SearchFilters({ filters, onChange, view, onViewChange, editions, owners, hideOwner }: Props) {
+export function SearchFilters({ filters, onChange, view, onViewChange, editions, owners, hideOwner, showReviewedFilter }: Props) {
   return (
     <div className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -107,18 +108,16 @@ export function SearchFilters({ filters, onChange, view, onViewChange, editions,
           </Select>
         )}
 
-        <Select value={filters.type} onChange={(e) => onChange({ type: e.target.value })}>
-          <option value="">Tipo</option>
-          <option value="Creature">Criatura</option>
-          <option value="Instant">Instant</option>
-          <option value="Sorcery">Sorcery</option>
-          <option value="Artifact">Artifact</option>
-          <option value="Enchantment">Enchantment</option>
-          <option value="Planeswalker">Planeswalker</option>
-        </Select>
+        {showReviewedFilter && (
+          <Select value={filters.reviewed} onChange={(e) => onChange({ reviewed: e.target.value })}>
+            <option value="">Revisada (todas)</option>
+            <option value="yes">Check</option>
+            <option value="no">Sin revisar</option>
+          </Select>
+        )}
       </div>
 
-      {(filters.search || filters.edition || filters.rarity || filters.language || filters.color || filters.condition || filters.owner || filters.type) && (
+      {(filters.search || filters.edition || filters.rarity || filters.language || filters.color || filters.condition || filters.owner || filters.reviewed) && (
         <div className="flex justify-end">
           <button
             onClick={() =>
@@ -130,7 +129,7 @@ export function SearchFilters({ filters, onChange, view, onViewChange, editions,
                 condition: '',
                 owner: '',
                 color: '',
-                type: '',
+                reviewed: '',
               })
             }
             className="text-xs text-zinc-400 hover:text-amber-400 underline"

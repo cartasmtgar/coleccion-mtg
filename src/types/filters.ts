@@ -9,7 +9,7 @@ export interface CardFilters {
   condition: string
   owner: string
   color: string
-  type: string
+  reviewed: string
 }
 
 export const DEFAULT_FILTERS: CardFilters = {
@@ -20,5 +20,5 @@ export const DEFAULT_FILTERS: CardFilters = {
   condition: '',
   owner: '',
   color: '',
-  type: '',
+  reviewed: '',
 }

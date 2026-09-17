@@ -1,11 +1,11 @@
-import { Loader2, Pencil, RefreshCw } from 'lucide-react'
+import { Check, Loader2, Minus, Pencil, RefreshCw } from 'lucide-react'
 import { Badge } from '../ui/Badge'
 import { formatPrice } from '../../lib/utils'
 import type { Card } from '../../types/card'
 
 type AggregatedCard = Card & { _total?: number; _langs?: Record<string, number> }
 
-export function CardGrid({ cards, onSelect, page = 0, showOwner = false, onSync, syncingId = null, onEdit }: { cards: (Card & { _total?: number; _langs?: Record<string, number> })[]; onSelect: (c: Card) => void; page?: number; showOwner?: boolean; onSync?: (c: Card) => void; syncingId?: string | null; onEdit?: (c: Card) => void }) {
+export function CardGrid({ cards, onSelect, page = 0, showOwner = false, onSync, syncingId = null, onEdit, onToggleReviewed }: { cards: (Card & { _total?: number; _langs?: Record<string, number> })[]; onSelect: (c: Card) => void; page?: number; showOwner?: boolean; onSync?: (c: Card) => void; syncingId?: string | null; onEdit?: (c: Card) => void; onToggleReviewed?: (c: Card) => void }) {
   if (cards.length === 0) {
     return <p className="py-12 text-center text-zinc-500">No se encontraron cartas con los filtros actuales.</p>
   }
@@ -37,6 +37,16 @@ export function CardGrid({ cards, onSelect, page = 0, showOwner = false, onSync,
           <div className="space-y-2 p-3">
             <div className="flex items-center gap-2">
               <h3 className="line-clamp-1 flex-1 font-semibold text-white">{card.name_en ?? card.name_es}</h3>
+              {onToggleReviewed && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onToggleReviewed(card) }}
+                  title={card.reviewed ? 'Check' : 'Sin revisar'}
+                  aria-label={`${card.reviewed ? 'Check' : 'Sin revisar'}: ${card.name_en ?? card.name_es}`}
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border transition ${card.reviewed ? 'border-emerald-600 bg-emerald-900/30 text-emerald-400 hover:border-emerald-500 hover:text-emerald-300' : 'border-zinc-700 bg-zinc-800 text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'}`}
+                >
+                  {card.reviewed ? <Check size={14} /> : <Minus size={14} />}
+                </button>
+              )}
               {onEdit && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onEdit(card) }}
