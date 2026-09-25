@@ -139,6 +139,8 @@ create policy "Authenticated can write sync_meta"
 -- Permisos a nivel de tabla (sin esto, las policies no alcanzan al rol anon)
 grant select on public.sync_meta to anon, authenticated;
 grant insert, update, delete on public.sync_meta to authenticated;
+-- La llave maestra del job programado necesita acceso total explícito
+grant all on public.sync_meta to service_role;
 
 -- ============================================================
 -- Seed opcional (descomenta para pruebas)
