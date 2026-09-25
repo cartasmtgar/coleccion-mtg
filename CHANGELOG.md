@@ -8,9 +8,13 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 ### Added
+- Sync programada de precios cada 12h: `scripts/sync-prices.mjs` (bulk Scryfall 75, escribe solo cambios, `--dry-run`) + `.github/workflows/sync-prices.yml` (cron + botón manual). Usa `SUPABASE_SERVICE_ROLE_KEY` solo en GitHub Secrets, nunca en el repo.
+- Tabla `sync_meta` + chip "Precios actualizados el …" en catálogo y admin (`getPricesSyncDate`, tolera tabla inexistente).
 - `ROADMAP.md` como fuente única de tareas pendientes/ideas/pospuestas con regla de actualización continua.
 - `dev.bat` para iniciar servidor local con doble click y apertura automática del navegador.
 - Mapa `2PS` → `itp` (Introductory Two-Player Set) en `src/lib/mtg-sets.ts`.
+- Ojito mostrar/ocultar contraseña en el login del admin (`src/pages/LoginPage.tsx`).
+- Logo del header: símbolo oficial de maná negro en lugar del icono genérico (`src/components/ui/ManaLogo.tsx`, headers de catálogo/admin/dashboard).
 
 ### Fixed
 - Sync Scryfall respeta la edición del Excel: la variante `-A/-B`/artista se resuelve solo dentro del set esperado (`src/services/scryfall.ts`). Elimina el fallback a otros sets que mandaba `Reprisal-B` a `wc02`, `Phyrexian War Beast-B` a `dkm`, `Torture-A` a `ptc` y `Casting of Bones-B`/`Lat-Nam's Legacy` a `cst`. Si no se encuentra el arte exacto, la carta queda pendiente en vez de guardar una versión incorrecta.

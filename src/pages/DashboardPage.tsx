@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Layers, Package, Coins, Image as ImageIcon, Users, Sparkles, ArrowLeft, Trophy, TrendingUp, Globe, Shield, Boxes, Clock } from 'lucide-react'
+import { Layers, Package, Coins, Image as ImageIcon, Users, ArrowLeft, Trophy, TrendingUp, Globe, Shield, Boxes, Clock } from 'lucide-react'
+import { ManaBlack } from '../components/ui/ManaLogo'
 import { useCards } from '../hooks/useCards'
 import { useAuth } from '../context/AuthContext'
 import { formatPrice } from '../lib/utils'
@@ -81,9 +82,7 @@ export function DashboardPage() {
       <header className="sticky top-0 z-40 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 text-zinc-900 shadow">
-              <Sparkles size={18} />
-            </div>
+            <ManaBlack />
             <div>
               <h1 className="text-sm font-bold leading-none text-white">Dashboard</h1>
               <p className="text-xs text-zinc-500">{user?.email} · Panel privado</p>

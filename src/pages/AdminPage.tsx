@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { LogOut, Plus, RefreshCw, Loader2, Sparkles, ExternalLink, LayoutDashboard, AlertTriangle, ArrowUp, ArrowDown, GripVertical, X } from 'lucide-react'
+import { ManaBlack } from '../components/ui/ManaLogo'
 import { Button } from '../components/ui/Button'
+import { PricesSyncChip } from '../components/ui/PricesSyncChip'
 import { SearchFilters } from '../components/public/SearchFilters'
 import { AdminTable } from '../components/admin/AdminTable'
 import { CardForm } from '../components/admin/CardForm'
@@ -321,9 +323,7 @@ export function AdminPage() {
       <header className="sticky top-0 z-40 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500 text-zinc-900">
-              <Sparkles size={18} />
-            </div>
+            <ManaBlack />
             <div>
               <h1 className="text-sm font-bold leading-none text-white">Panel Admin</h1>
               <p className="text-xs text-zinc-500">{user?.email}</p>
@@ -351,6 +351,7 @@ export function AdminPage() {
           <div>
             <h2 className="text-2xl font-bold text-white">Inventario</h2>
             <p className="text-sm text-zinc-500">{filtered.length} cartas · Ruta privada /admin</p>
+            <PricesSyncChip />
           </div>
           <div className="flex flex-col items-end gap-1">
             <div className="flex gap-2">

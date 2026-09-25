@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Mail, Sparkles, X, ArrowUp, ArrowDown, GripVertical } from 'lucide-react'
+import { Mail, X, ArrowUp, ArrowDown, GripVertical } from 'lucide-react'
+import { ManaBlack } from '../components/ui/ManaLogo'
 import { Button } from '../components/ui/Button'
+import { PricesSyncChip } from '../components/ui/PricesSyncChip'
 import { SearchFilters } from '../components/public/SearchFilters'
 import { CardGrid } from '../components/public/CardGrid'
 import { CardTable, type CatalogSortField } from '../components/public/CardTable'
@@ -124,9 +126,7 @@ export function CatalogPage() {
       <header className="sticky top-0 z-40 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500 text-zinc-900">
-              <Sparkles size={18} />
-            </div>
+            <ManaBlack />
             <div>
               <h1 className="text-sm font-bold leading-none text-white">Colección MTG</h1>
               <p className="text-xs text-zinc-500">Catálogo público · Scryfall</p>
@@ -157,6 +157,7 @@ export function CatalogPage() {
               <div>
                 <h2 className="text-2xl font-bold text-white">Catálogo</h2>
                 <p className="text-sm text-zinc-500">{grouped.length} cartas únicas · {filtered.reduce((a,c)=>a+c.quantity,0)} unidades totales</p>
+                <PricesSyncChip />
               </div>
               <Button variant="outline" size="sm" onClick={() => setContactOpen(true)}>
                 <Mail size={14} /> Cotizar cartas
