@@ -1,6 +1,11 @@
 # Roadmap — Colección MTG Web + Admin
 
-> **Fuente única de verdad para tareas pendientes, ideas y pospuestos.** Este archivo debe mantenerse actualizado en todo momento (ver `AGENTS.md:56`). Última actualización: 2026-09-07
+> **Fuente única de verdad para tareas pendientes, ideas y pospuestos.** Este archivo debe mantenerse actualizado en todo momento (ver `AGENTS.md:56`). Última actualización: 2026-09-25
+
+## Estado actual — v0.4.0 (2026-09-25) — Sync programada de precios
+- [x] **Script + workflow:** `scripts/sync-prices.mjs` (1366 versiones en 19 tandas bulk, solo diffs, `--dry-run` verificado OK) + `.github/workflows/sync-prices.yml` (cron cada 12h + manual). Llave maestra solo en Secrets.
+- [x] **Fecha visible:** `sync_meta` + chip en catálogo/admin.
+- [ ] **Pendiente usuario:** (1) migración `sync_meta` en SQL Editor; (2) secretos `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` en GitHub; (3) corrida manual desde Actions y verificar log + chip.
 
 ## Estado actual — v0.3.2 (2026-09-07) — Sync respeta edición + arte exacto
 - [x] **Fix variantes:** `resolveVariantIfNeeded` filtra por set antes de buscar `A/B`/artista; sin fallback a otros sets (antes `Reprisal-B` → `wc02`, `Phyrexian War Beast-B` → `dkm`, `Torture-A` → `ptc`, `Casting of Bones-B`/`Lat-Nam's Legacy` → `cst`). Si no hay arte exacto, queda pendiente en vez de guardar versión incorrecta.

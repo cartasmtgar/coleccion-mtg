@@ -159,3 +159,23 @@ export async function syncCardWithScryfall(
     reviewed: artChanged ? false : card.reviewed,
   })
 }
+
+/**
+ * Fecha de la última sincronización programada de precios (sync_meta).
+ * Devuelve null si la tabla no existe aún o no hay corridas: la UI
+ * simplemente no muestra el chip en ese caso.
+ */
+export async function getPricesSyncDate(): Promise<string | null> {
+  if (!isSupabaseConfigured || !supabase) return null
+  try {
+    const { data, error } = await supabase
+      .from('sync_meta')
+      .select('value')
+      .eq('key', 'last_prices_sync')
+      .maybeSingle()
+    if (error || !data) return null
+    return (data as { value: string | null }).value
+  } catch {
+    return null
+  }
+}

@@ -112,6 +112,35 @@ create policy "Authenticated can delete cards"
   using (auth.role() = 'authenticated');
 
 -- ============================================================
+-- Tabla: sync_meta (control de sincronizaciones programadas)
+-- ============================================================
+create table if not exists public.sync_meta (
+  key text primary key,
+  value text,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.sync_meta enable row level security;
+
+-- Lectura pública (chip "Precios actualizados el...")
+drop policy if exists "Public can read sync_meta" on public.sync_meta;
+create policy "Public can read sync_meta"
+  on public.sync_meta for select
+  using (true);
+
+-- Escritura con llave maestra (el job usa service_role y salta RLS;
+-- esta policy cubre escrituras como usuario autenticado si hiciera falta)
+drop policy if exists "Authenticated can write sync_meta" on public.sync_meta;
+create policy "Authenticated can write sync_meta"
+  on public.sync_meta for all
+  using (auth.role() = 'authenticated')
+  with check (auth.role() = 'authenticated');
+
+-- Permisos a nivel de tabla (sin esto, las policies no alcanzan al rol anon)
+grant select on public.sync_meta to anon, authenticated;
+grant insert, update, delete on public.sync_meta to authenticated;
+
+-- ============================================================
 -- Seed opcional (descomenta para pruebas)
 -- ============================================================
 -- insert into public.cards (name_es, name_en, type, edition, rarity, year, language, condition, owner, quantity, price_usd, scryfall_id, image_url)
