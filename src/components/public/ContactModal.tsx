@@ -3,10 +3,22 @@ import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
 import { Input, Textarea } from '../ui/Input'
 import { CONTACT_INFO } from '../../lib/constants'
-import { useState } from 'react'
+import { getContactSettings, type ContactSettings } from '../../services/settings.service'
+import { useEffect, useState } from 'react'
 
 export function ContactModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [sent, setSent] = useState(false)
+  const [contact, setContact] = useState<ContactSettings | null>(null)
+
+  useEffect(() => {
+    if (open) {
+      getContactSettings().then(setContact).catch(() => null)
+    }
+  }, [open ])
+
+  const whatsapp = contact?.phone ?? CONTACT_INFO.whatsapp
+  const whatsappLink = contact?.whatsappLink ?? CONTACT_INFO.whatsappLink
+  const email = contact?.email ?? CONTACT_INFO.email
 
   return (
     <Modal open={open} onClose={onClose} title="Contacto — Cotiza tus cartas">
@@ -17,7 +29,7 @@ export function ContactModal({ open, onClose }: { open: boolean; onClose: () => 
 
         <div className="grid gap-3 sm:grid-cols-2">
           <a
-            href={CONTACT_INFO.whatsappLink}
+            href={whatsappLink}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-3 rounded-xl border border-emerald-800/40 bg-emerald-950/30 p-4 hover:bg-emerald-900/30 transition"
@@ -25,17 +37,17 @@ export function ContactModal({ open, onClose }: { open: boolean; onClose: () => 
             <MessageCircle className="text-emerald-400" />
             <div>
               <div className="text-sm font-semibold text-white">WhatsApp</div>
-              <div className="text-xs text-zinc-400">{CONTACT_INFO.whatsapp}</div>
+              <div className="text-xs text-zinc-400">{whatsapp}</div>
             </div>
           </a>
           <a
-            href={`mailto:${CONTACT_INFO.email}`}
+            href={`mailto:${email}`}
             className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800 transition"
           >
             <Mail className="text-amber-400" />
             <div>
               <div className="text-sm font-semibold text-white">Email</div>
-              <div className="text-xs text-zinc-400">{CONTACT_INFO.email}</div>
+              <div className="text-xs text-zinc-400">{email}</div>
             </div>
           </a>
         </div>
