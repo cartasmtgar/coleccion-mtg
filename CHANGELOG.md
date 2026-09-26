@@ -15,6 +15,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Mapa `2PS` → `itp` (Introductory Two-Player Set) en `src/lib/mtg-sets.ts`.
 - Ojito mostrar/ocultar contraseña en el login del admin (`src/pages/LoginPage.tsx`).
 - Logo del header: símbolo oficial de maná negro en lugar del icono genérico (`src/components/ui/ManaLogo.tsx`, headers de catálogo/admin/dashboard).
+- Orden base por nombre A→Z (como Scryfall) siempre aplicado en silencio; el control de orden arranca vacío y "Limpiar" lo vacía de verdad (los chips solo muestran tus ordenamientos).
+- Paginador Anterior/Siguiente sube arriba automáticamente; botón flotante para volver al tope (`BackToTop` en catálogo y admin).
+- Sección Ajustes en admin (`/admin/ajustes`): edita teléfono/WhatsApp y email del modal de contacto (tabla `settings`, link de WhatsApp armado solo).
 
 ### Fixed
 - Sync Scryfall respeta la edición del Excel: la variante `-A/-B`/artista se resuelve solo dentro del set esperado (`src/services/scryfall.ts`). Elimina el fallback a otros sets que mandaba `Reprisal-B` a `wc02`, `Phyrexian War Beast-B` a `dkm`, `Torture-A` a `ptc` y `Casting of Bones-B`/`Lat-Nam's Legacy` a `cst`. Si no se encuentra el arte exacto, la carta queda pendiente en vez de guardar una versión incorrecta.
@@ -31,10 +34,18 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Grid del admin: botón de resync en cada carta (abre picker si tiene variante).
 - Grid del admin: botón de editar al lado del resync (abre el formulario).
 - Modal de detalle en admin: botones Sincronizar y Editar.
+- Modal de detalle en admin: botón precio en el cuadro Precios Scryfall que actualiza solo el precio.
+- Anti-abuso del botón de precio: enfriamiento de 60 min por carta (avisa cuánto falta).
 - Grid del admin: icono marcar revisada (gris con guión / verde con tilde).
 - Filtro Revisada (Check / Sin revisar) en admin reemplaza al filtro Tipo (sin uso).
 - Tabla del admin: icono marcar revisada en Acciones.
 - Picker de variantes: link Goldfish clickeable en nueva pestaña.
+- Picker de variantes: vacía la lista anterior al abrir, muestra spinner mientras carga y ignora respuestas viejas (evita sincronizar el arte equivocado por apuro).
+- Modal de carta: spinner "Cargando datos de Scryfall…" mientras llega la info (texto, legalidades, precios).
+- Reserved List: columna `is_reserved` (backfill de 69 nombres verificados + sync la setea desde Scryfall), filtro Reserved List? en catálogo/admin y marca sutil (escudo + texto) junto al título en grid, tabla y modal, sin tocar los pills.
+- Filtros con título visible (Edición, Rareza, Idioma, Color, Condición, Dueño, Revisada, Reservada) para saber qué es cada valor elegido.
+- Filtros y opciones en inglés (solo textos; los valores internos no cambian).
+- Filtro Reserved? con signo de pregunta; opciones de edición con código Scryfall (`4ed`, `5ed`, …).
 - `reviewed boolean` en `cards` (migración idempotente en `schema.sql`): botón "Marcar revisada" en el modal del admin; elegir arte en el picker marca revisada (solo art-words Urza); el sync resetea la marca si cambia el arte y el formulario si cambia edición/goldfish.
 
 ### Changed

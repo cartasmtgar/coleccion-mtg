@@ -1,4 +1,4 @@
-import { ExternalLink, Coins, ScrollText, ShieldCheck, Pencil, RefreshCw, Loader2, Check } from 'lucide-react'
+import { ExternalLink, Coins, ScrollText, ShieldCheck, Pencil, RefreshCw, Loader2, Check, Shield } from 'lucide-react'
 import { Modal } from '../ui/Modal'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
@@ -15,6 +15,9 @@ export function CardDetail({
   onSync,
   syncing = false,
   onToggleReviewed,
+  onRefreshPrice,
+  refreshingPrice = false,
+  scryLoading = false,
 }: {
   card: Card | null
   scryfall: ScryfallCard | null
@@ -24,6 +27,9 @@ export function CardDetail({
   onSync?: (c: Card) => void
   syncing?: boolean
   onToggleReviewed?: (c: Card) => void
+  onRefreshPrice?: (c: Card) => void
+  refreshingPrice?: boolean
+  scryLoading?: boolean
 }) {
   if (!card) return null
 
@@ -32,7 +38,18 @@ export function CardDetail({
   const text = scryfall?.oracle_text ?? scryfall?.card_faces?.[0]?.oracle_text
 
   return (
-    <Modal open={open} onClose={onClose} title={card.name_en ?? card.name_es}>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={card.name_en ?? card.name_es}
+      titleExtra={
+        card.is_reserved ? (
+          <span title="Reserved List — nunca se reimprime" className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-amber-400">
+            <Shield size={14} /> Reserved List
+          </span>
+        ) : undefined
+      }
+    >
       <div className="grid gap-6 md:grid-cols-[280px_1fr]">
         <div>
           <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
@@ -44,26 +61,28 @@ export function CardDetail({
               </div>
             )}
           </div>
-          {card.scryfall_uri && (
-            <a
-              href={card.scryfall_uri}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center gap-1.5 text-sm text-amber-400 hover:underline"
-            >
-              Ver en Scryfall <ExternalLink size={14} />
-            </a>
-          )}
-          {card.goldfish_url && (
-            <a
-              href={card.goldfish_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-flex items-center gap-1.5 text-sm text-zinc-400 hover:text-amber-300 hover:underline"
-            >
-              Referencia Goldfish <ExternalLink size={14} />
-            </a>
-          )}
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+            {card.scryfall_uri && (
+              <a
+                href={card.scryfall_uri}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-amber-400 hover:underline"
+              >
+                Ver en Scryfall <ExternalLink size={14} />
+              </a>
+            )}
+            {card.goldfish_url && (
+              <a
+                href={card.goldfish_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-zinc-400 hover:text-amber-300 hover:underline"
+              >
+                Referencia Goldfish <ExternalLink size={14} />
+              </a>
+            )}
+          </div>
           {(onEdit || onSync) && (
             <div className="mt-3 flex flex-wrap gap-2">
               {onSync && (
@@ -109,6 +128,13 @@ export function CardDetail({
             <div><dt className="text-zinc-500">Precio u.</dt><dd className="font-semibold text-amber-400">{formatPrice(price)}</dd></div>
           </dl>
 
+          {scryLoading && !scryfall && card.scryfall_id && (
+            <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900 p-3 text-sm text-zinc-400">
+              <Loader2 size={16} className="animate-spin text-amber-400" />
+              Cargando datos de Scryfall…
+            </div>
+          )}
+
           {text && (
             <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-3">
               <h4 className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-zinc-200"><ScrollText size={16} /> Texto</h4>
@@ -131,7 +157,20 @@ export function CardDetail({
 
           {scryfall && (
             <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-3 text-xs text-zinc-400">
-              <div className="flex items-center gap-1.5 mb-1 font-medium text-zinc-300"><Coins size={14} /> Precios Scryfall</div>
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 font-medium text-zinc-300"><Coins size={14} /> Precios Scryfall</div>
+                {onRefreshPrice && card.scryfall_id && (
+                  <button
+                    onClick={() => onRefreshPrice(card)}
+                    disabled={refreshingPrice}
+                    title="Actualizar solo el precio"
+                    aria-label="Actualizar solo el precio"
+                    className="inline-flex items-center gap-1 rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs text-zinc-300 transition hover:border-amber-500 hover:text-amber-400 disabled:opacity-50"
+                  >
+                    {refreshingPrice ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
+                  </button>
+                )}
+              </div>
               <div className="flex gap-4">
                 <span>USD: {scryfall.prices.usd ?? '—'}</span>
                 <span>Foil: {scryfall.prices.usd_foil ?? '—'}</span>

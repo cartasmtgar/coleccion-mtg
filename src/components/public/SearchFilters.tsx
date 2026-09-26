@@ -1,6 +1,7 @@
 import { Search, LayoutGrid, Table2 } from 'lucide-react'
-import { Input, Select } from '../ui/Input'
+import { Input, Label, Select } from '../ui/Input'
 import { Button } from '../ui/Button'
+import { editionToSetCode } from '../../lib/mtg-sets'
 import type { CardFilters, CatalogView } from '../../types/filters'
 
 interface Props {
@@ -21,11 +22,11 @@ export function SearchFilters({ filters, onChange, view, onViewChange, editions,
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
           <Input
-            placeholder="Buscar por nombre (ES/EN), tipo..."
+            placeholder="Search by name (ES/EN), type..."
             value={filters.search}
             onChange={(e) => onChange({ search: e.target.value })}
             className="pl-9"
-            aria-label="Buscar cartas"
+            aria-label="Search cards"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -49,75 +50,105 @@ export function SearchFilters({ filters, onChange, view, onViewChange, editions,
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
-        <Select value={filters.edition} onChange={(e) => onChange({ edition: e.target.value })}>
-          <option value="">Edición (todas)</option>
-          {editions.map((ed) => (
-            <option key={ed} value={ed}>
-              {ed}
-            </option>
-          ))}
-        </Select>
-
-        <Select value={filters.rarity} onChange={(e) => onChange({ rarity: e.target.value })}>
-          <option value="">Rareza</option>
-          <option value="common">Common</option>
-          <option value="uncommon">Uncommon</option>
-          <option value="rare">Rare</option>
-          <option value="mythic">Mythic</option>
-          <option value="special">Special</option>
-          <option value="bonus">Bonus</option>
-          <option value="basic">Basic</option>
-        </Select>
-
-        <Select value={filters.language} onChange={(e) => onChange({ language: e.target.value })}>
-          <option value="">Idioma</option>
-          <option value="ES">ES</option>
-          <option value="EN">EN</option>
-          <option value="PT">PT</option>
-        </Select>
-
-        <Select value={filters.color} onChange={(e) => onChange({ color: e.target.value })}>
-          <option value="">Color</option>
-          <option value="Blanco">Blanco (W)</option>
-          <option value="Azul">Azul (U)</option>
-          <option value="Negro">Negro (B)</option>
-          <option value="Rojo">Rojo (R)</option>
-          <option value="Verde">Verde (G)</option>
-          <option value="Doradas">Doradas</option>
-          <option value="Artefacto">Artefacto</option>
-          <option value="Tierra">Tierra</option>
-        </Select>
-
-        <Select value={filters.condition} onChange={(e) => onChange({ condition: e.target.value })}>
-          <option value="">Condición</option>
-          <option value="NM">NM</option>
-          <option value="LP">LP</option>
-          <option value="MP">MP</option>
-          <option value="HP">HP</option>
-          <option value="DMG">DMG</option>
-        </Select>
-
-        {!hideOwner && (
-          <Select value={filters.owner} onChange={(e) => onChange({ owner: e.target.value })}>
-            <option value="">Dueño</option>
-            {owners.map((o) => (
-              <option key={o} value={o}>
-                {o}
+        <div>
+          <Label>Edition</Label>
+          <Select value={filters.edition} onChange={(e) => onChange({ edition: e.target.value })}>
+            <option value="">All</option>
+            {editions.map((ed) => (
+              <option key={ed} value={ed}>
+                {(editionToSetCode(ed) ?? ed).toUpperCase()}
               </option>
             ))}
           </Select>
+        </div>
+
+        <div>
+          <Label>Rarity</Label>
+          <Select value={filters.rarity} onChange={(e) => onChange({ rarity: e.target.value })}>
+            <option value="">All</option>
+            <option value="common">Common</option>
+            <option value="uncommon">Uncommon</option>
+            <option value="rare">Rare</option>
+            <option value="mythic">Mythic</option>
+            <option value="special">Special</option>
+            <option value="bonus">Bonus</option>
+            <option value="basic">Basic</option>
+          </Select>
+        </div>
+
+        <div>
+          <Label>Language</Label>
+          <Select value={filters.language} onChange={(e) => onChange({ language: e.target.value })}>
+            <option value="">All</option>
+            <option value="ES">ES</option>
+            <option value="EN">EN</option>
+            <option value="PT">PT</option>
+          </Select>
+        </div>
+
+        <div>
+          <Label>Color</Label>
+          <Select value={filters.color} onChange={(e) => onChange({ color: e.target.value })}>
+            <option value="">All</option>
+            <option value="Blanco">White (W)</option>
+            <option value="Azul">Blue (U)</option>
+            <option value="Negro">Black (B)</option>
+            <option value="Rojo">Red (R)</option>
+            <option value="Verde">Green (G)</option>
+            <option value="Doradas">Gold</option>
+            <option value="Artefacto">Artifact</option>
+            <option value="Tierra">Land</option>
+          </Select>
+        </div>
+
+        <div>
+          <Label>Condition</Label>
+          <Select value={filters.condition} onChange={(e) => onChange({ condition: e.target.value })}>
+            <option value="">All</option>
+            <option value="NM">NM</option>
+            <option value="LP">LP</option>
+            <option value="MP">MP</option>
+            <option value="HP">HP</option>
+            <option value="DMG">DMG</option>
+          </Select>
+        </div>
+
+        {!hideOwner && (
+          <div>
+            <Label>Owner</Label>
+            <Select value={filters.owner} onChange={(e) => onChange({ owner: e.target.value })}>
+              <option value="">All</option>
+              {owners.map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </Select>
+          </div>
         )}
 
         {showReviewedFilter && (
-          <Select value={filters.reviewed} onChange={(e) => onChange({ reviewed: e.target.value })}>
-            <option value="">Revisada (todas)</option>
-            <option value="yes">Check</option>
-            <option value="no">Sin revisar</option>
-          </Select>
+          <div>
+            <Label>Reviewed</Label>
+            <Select value={filters.reviewed} onChange={(e) => onChange({ reviewed: e.target.value })}>
+              <option value="">All</option>
+              <option value="yes">Check</option>
+              <option value="no">Not reviewed</option>
+            </Select>
+          </div>
         )}
+
+        <div>
+          <Label>Reserved List?</Label>
+          <Select value={filters.reserved} onChange={(e) => onChange({ reserved: e.target.value })}>
+            <option value="">All</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </Select>
+        </div>
       </div>
 
-      {(filters.search || filters.edition || filters.rarity || filters.language || filters.color || filters.condition || filters.owner || filters.reviewed) && (
+      {(filters.search || filters.edition || filters.rarity || filters.language || filters.color || filters.condition || filters.owner || filters.reviewed || filters.reserved) && (
         <div className="flex justify-end">
           <button
             onClick={() =>
@@ -130,11 +161,12 @@ export function SearchFilters({ filters, onChange, view, onViewChange, editions,
                 owner: '',
                 color: '',
                 reviewed: '',
+                reserved: '',
               })
             }
             className="text-xs text-zinc-400 hover:text-amber-400 underline"
           >
-            Limpiar filtros
+            Clear filters
           </button>
         </div>
       )}

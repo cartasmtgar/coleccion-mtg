@@ -1,14 +1,15 @@
 import { useEffect } from 'react'
 import { X } from 'lucide-react'
-import type { PropsWithChildren } from 'react'
+import type { PropsWithChildren, ReactNode } from 'react'
 
 interface Props extends PropsWithChildren {
   open: boolean
   onClose: () => void
   title?: string
+  titleExtra?: ReactNode
 }
 
-export function Modal({ open, onClose, title, children }: Props) {
+export function Modal({ open, onClose, title, titleExtra, children }: Props) {
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
@@ -34,7 +35,10 @@ export function Modal({ open, onClose, title, children }: Props) {
         className="relative max-h-[90vh] w-full max-w-2xl overflow-auto rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl"
       >
         <div className="mb-4 flex items-center justify-between">
-          {title ? <h2 className="text-lg font-semibold text-white">{title}</h2> : <span />}
+          <div className="flex min-w-0 items-center gap-2">
+            {title ? <h2 className="truncate text-lg font-semibold text-white">{title}</h2> : <span />}
+            {titleExtra}
+          </div>
           <button
             onClick={onClose}
             aria-label="Cerrar"

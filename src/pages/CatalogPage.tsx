@@ -9,6 +9,7 @@ import { CardTable, type CatalogSortField } from '../components/public/CardTable
 import { CardDetail } from '../components/public/CardDetail'
 import { ContactModal } from '../components/public/ContactModal'
 import { Pagination } from '../components/ui/Pagination'
+import { BackToTop } from '../components/ui/BackToTop'
 import { Select } from '../components/ui/Input'
 import { useCards } from '../hooks/useCards'
 import { DEFAULT_FILTERS, type CardFilters, type CatalogView } from '../types/filters'
@@ -32,12 +33,17 @@ export function CatalogPage() {
   const [contactOpen, setContactOpen] = useState(false)
   const [detailCard, setDetailCard] = useState<Card | null>(null)
   const [detailScryfall, setDetailScryfall] = useState<ScryfallCard | null>(null)
+  const [scryLoading, setScryLoading] = useState(false)
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(50)
   const [sortRules, setSortRules] = useState<SortRule<CatalogSortField>[]>(() => {
     try {
       const raw = localStorage.getItem('catalog:sort')
-      return raw ? (JSON.parse(raw) as SortRule<CatalogSortField>[]) : []
+      if (raw) {
+        const parsed = JSON.parse(raw) as SortRule<CatalogSortField>[]
+        if (Array.isArray(parsed)) return parsed
+      }
+      return []
     } catch {
       return []
     }
@@ -59,6 +65,8 @@ export function CatalogPage() {
       if (filters.color && c.type !== filters.color) return false
       if (filters.condition && c.condition !== filters.condition) return false
       if (filters.owner && c.owner !== filters.owner) return false
+      if (filters.reserved === 'yes' && !c.is_reserved) return false
+      if (filters.reserved === 'no' && c.is_reserved) return false
       return true
     })
   }, [cards, filters])
@@ -111,12 +119,16 @@ export function CatalogPage() {
   const handleSelect = async (card: Card) => {
     setDetailCard(card)
     setDetailScryfall(null)
+    setScryLoading(false)
     if (card.scryfall_id) {
+      setScryLoading(true)
       try {
         const sc = await fetchByScryfallId(card.scryfall_id)
         setDetailScryfall(sc)
       } catch {
         // ignore
+      } finally {
+        setScryLoading(false)
       }
     }
   }
@@ -249,8 +261,9 @@ export function CatalogPage() {
         Colección MTG · Datos enriquecidos con Scryfall API · {new Date().getFullYear()}
       </footer>
 
-      <CardDetail card={detailCard} scryfall={detailScryfall} open={!!detailCard} onClose={() => setDetailCard(null)} />
+      <CardDetail card={detailCard} scryfall={detailScryfall} open={!!detailCard} onClose={() => setDetailCard(null)} scryLoading={scryLoading} />
       <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
+      <BackToTop />
     </div>
   )
 }

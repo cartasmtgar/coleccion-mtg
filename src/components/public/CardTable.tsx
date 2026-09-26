@@ -1,3 +1,4 @@
+import { Shield } from 'lucide-react'
 import { formatPrice } from '../../lib/utils'
 import type { Card } from '../../types/card'
 
@@ -30,7 +31,14 @@ export function CardTable({ cards, onSelect }: { cards: (Card & { _total?: numbe
               className="cursor-pointer hover:bg-zinc-900"
             >
               <td className="px-4 py-3">
-                <div className="font-medium text-white">{c.name_en ?? c.name_es}</div>
+                <div className="flex items-center gap-2 font-medium text-white">
+                  <span>{c.name_en ?? c.name_es}</span>
+                  {c.is_reserved && (
+                    <span title="Reserved List — nunca se reimprime" className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-amber-400">
+                      <Shield size={14} /> Reserved List
+                    </span>
+                  )}
+                </div>
                 {c.name_es && c.name_en && c.name_en !== c.name_es && <div className="text-xs text-zinc-500">{c.name_es}</div>}
               </td>
               <td className="px-4 py-3 text-zinc-300">{c.edition ?? '—'}</td>

@@ -14,6 +14,11 @@ export function Pagination({ page, pageSize, total, onPageChange, onPageSizeChan
   const start = total === 0 ? 0 : page * pageSize + 1
   const end = Math.min((page + 1) * pageSize, total)
 
+  const goToPage = (p: number) => {
+    onPageChange(p)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between py-3 text-sm">
       <div className="flex items-center gap-2 text-zinc-400">
@@ -42,7 +47,7 @@ export function Pagination({ page, pageSize, total, onPageChange, onPageSizeChan
 
       <div className="flex items-center gap-1">
         <button
-          onClick={() => onPageChange(Math.max(0, page - 1))}
+          onClick={() => goToPage(Math.max(0, page - 1))}
           disabled={page === 0}
           className="inline-flex items-center gap-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed"
         >
@@ -54,7 +59,7 @@ export function Pagination({ page, pageSize, total, onPageChange, onPageSizeChan
         </span>
 
         <button
-          onClick={() => onPageChange(Math.min(totalPages - 1, page + 1))}
+          onClick={() => goToPage(Math.min(totalPages - 1, page + 1))}
           disabled={page >= totalPages - 1}
           className="inline-flex items-center gap-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed"
         >

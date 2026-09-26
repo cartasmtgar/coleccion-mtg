@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { LogOut, Plus, RefreshCw, Loader2, Sparkles, ExternalLink, LayoutDashboard, AlertTriangle, ArrowUp, ArrowDown, GripVertical, X } from 'lucide-react'
+import { LogOut, Plus, RefreshCw, Loader2, Sparkles, ExternalLink, LayoutDashboard, AlertTriangle, ArrowUp, ArrowDown, GripVertical, X, Settings } from 'lucide-react'
 import { ManaBlack } from '../components/ui/ManaLogo'
 import { Button } from '../components/ui/Button'
 import { PricesSyncChip } from '../components/ui/PricesSyncChip'
@@ -12,6 +12,7 @@ import { CardGrid } from '../components/public/CardGrid'
 import { VariantPicker } from '../components/admin/VariantPicker'
 import { Modal } from '../components/ui/Modal'
 import { Pagination } from '../components/ui/Pagination'
+import { BackToTop } from '../components/ui/BackToTop'
 import { Select } from '../components/ui/Input'
 import { useCards } from '../hooks/useCards'
 import { useAuth } from '../context/AuthContext'
@@ -21,6 +22,7 @@ import type { ScryfallCard } from '../types/scryfall'
 import { fetchByScryfallId, searchScryfallExact, bulkFetchCollection, getScryfallImage, getScryfallPrice } from '../services/scryfall'
 import { editionToSetCode, getCanonicalEnglishName, normalizeForCompare, parseGoldfishUrl, needsReview, isArtWordVariant } from '../lib/mtg-sets'
 import { applySort, removeRule, toggleDir, type SortRule } from '../lib/sort'
+import { markPriceRefreshed, priceRefreshWaitMin } from '../lib/utils'
 import * as cardsService from '../services/cards.service'
 
 export function AdminPage() {
@@ -44,6 +46,8 @@ export function AdminPage() {
   const [syncProgress, setSyncProgress] = useState<{ done: number; total: number } | null>(null)
   const [detailCard, setDetailCard] = useState<Card | null>(null)
   const [detailScryfall, setDetailScryfall] = useState<ScryfallCard | null>(null)
+  const [scryLoading, setScryLoading] = useState(false)
+  const [refreshingPrice, setRefreshingPrice] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Card | null>(null)
   const [variantPickerCard, setVariantPickerCard] = useState<Card | null>(null)
   const [page, setPage] = useState(0)
@@ -51,7 +55,11 @@ export function AdminPage() {
   const [sortRules, setSortRules] = useState<SortRule<import('../components/admin/AdminTable').AdminSortField>[]>(() => {
     try {
       const raw = localStorage.getItem('admin:sort')
-      return raw ? (JSON.parse(raw) as SortRule<import('../components/admin/AdminTable').AdminSortField>[]) : []
+      if (raw) {
+        const parsed = JSON.parse(raw) as SortRule<import('../components/admin/AdminTable').AdminSortField>[]
+        if (Array.isArray(parsed)) return parsed
+      }
+      return []
     } catch {
       return []
     }
@@ -78,6 +86,8 @@ export function AdminPage() {
       if (filters.owner && c.owner !== filters.owner) return false
       if (filters.reviewed === 'yes' && !c.reviewed) return false
       if (filters.reviewed === 'no' && c.reviewed) return false
+      if (filters.reserved === 'yes' && !c.is_reserved) return false
+      if (filters.reserved === 'no' && c.is_reserved) return false
       return true
     })
   }, [cards, filters, syncFilter])
@@ -137,7 +147,7 @@ export function AdminPage() {
       // Siempre busca por nombre+edición para corregir ediciones erróneas previas (no usa scryfall_id cacheado)
       const sc = await searchScryfallExact(card.name_en || card.name_es, card.edition, card.language, card.goldfish_url)
       if (!sc) throw new Error('No se encontró en Scryfall')
-      await cardsService.syncCardWithScryfall(card, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc) })
+      await cardsService.syncCardWithScryfall(card, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc), reserved: sc.reserved ?? null })
       await refresh()
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Error sincronizando')
@@ -153,7 +163,7 @@ export function AdminPage() {
     setVariantPickerCard(null)
     setSyncingId(picked.id)
     try {
-      await cardsService.syncCardWithScryfall(picked, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc) })
+      await cardsService.syncCardWithScryfall(picked, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc), reserved: sc.reserved ?? null })
       // Arte por dibujo (Urza) o básica: la elección manual es la única
       // verificación posible → marcar revisada para que salga de la lista
       if (isArtWordVariant(variant) || picked.rarity === 'basic') {
@@ -205,7 +215,7 @@ export function AdminPage() {
       try {
         setSyncingId(card.id)
         const sc = await searchScryfallExact(card.name_en || card.name_es, card.edition, card.language, card.goldfish_url)
-        if (sc) await cardsService.syncCardWithScryfall(card, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc) })
+        if (sc) await cardsService.syncCardWithScryfall(card, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc), reserved: sc.reserved ?? null })
       } catch {}
       setSyncProgress(p => (p ? { done: p.done + 1, total: p.total } : p))
     }
@@ -234,13 +244,13 @@ export function AdminPage() {
               if (expected && sc.set.toLowerCase() !== expected.toLowerCase()) {
                 try {
                   const sc2 = await searchScryfallExact(card.name_en || card.name_es, card.edition, card.language, card.goldfish_url)
-                  if (sc2) await cardsService.syncCardWithScryfall(card, { id: sc2.id, uri: sc2.scryfall_uri, image: getScryfallImage(sc2), price: getScryfallPrice(sc2) })
+                  if (sc2) await cardsService.syncCardWithScryfall(card, { id: sc2.id, uri: sc2.scryfall_uri, image: getScryfallImage(sc2), price: getScryfallPrice(sc2), reserved: sc2.reserved ?? null })
                 } catch {}
                 setSyncProgress(p => (p ? { done: p.done + 1, total: p.total } : p))
                 continue
               }
               setSyncingId(card.id)
-              await cardsService.syncCardWithScryfall(card, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc) })
+              await cardsService.syncCardWithScryfall(card, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc), reserved: sc.reserved ?? null })
               setSyncProgress(p => (p ? { done: p.done + 1, total: p.total } : p))
             }
           } else {
@@ -248,7 +258,7 @@ export function AdminPage() {
             for (const card of cardsForKey) {
               try {
                 const sc2 = await searchScryfallExact(card.name_en || card.name_es, card.edition, card.language, card.goldfish_url)
-                if (sc2) await cardsService.syncCardWithScryfall(card, { id: sc2.id, uri: sc2.scryfall_uri, image: getScryfallImage(sc2), price: getScryfallPrice(sc2) })
+                if (sc2) await cardsService.syncCardWithScryfall(card, { id: sc2.id, uri: sc2.scryfall_uri, image: getScryfallImage(sc2), price: getScryfallPrice(sc2), reserved: sc2.reserved ?? null })
               } catch {}
               setSyncProgress(p => (p ? { done: p.done + 1, total: p.total } : p))
             }
@@ -262,7 +272,7 @@ export function AdminPage() {
           for (const card of cardsForKey) {
             try {
               const sc = await searchScryfallExact(card.name_en || card.name_es, card.edition, card.language, card.goldfish_url)
-              if (sc) await cardsService.syncCardWithScryfall(card, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc) })
+              if (sc) await cardsService.syncCardWithScryfall(card, { id: sc.id, uri: sc.scryfall_uri, image: getScryfallImage(sc), price: getScryfallPrice(sc), reserved: sc.reserved ?? null })
             } catch { /* ignore */ }
             setSyncProgress(p => (p ? { done: p.done + 1, total: p.total } : p))
           }
@@ -293,6 +303,31 @@ export function AdminPage() {
     await refresh()
   }
 
+  const handleRefreshPrice = async (card: Card) => {
+    if (!card.scryfall_id) return
+    const wait = priceRefreshWaitMin(card.id)
+    if (wait > 0) {
+      alert(`El precio ya se actualizó recientemente. Intenta en ~${wait} min.`)
+      return
+    }
+    setRefreshingPrice(true)
+    try {
+      const sc = await fetchByScryfallId(card.scryfall_id)
+      const price = sc ? getScryfallPrice(sc) : null
+      const updated = await cardsService.updateCard(card.id, { price_usd: price ?? card.price_usd })
+      markPriceRefreshed(card.id)
+      if (detailCard && detailCard.id === card.id) {
+        setDetailCard(updated)
+        setDetailScryfall(sc)
+      }
+      await refresh()
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Error actualizando el precio')
+    } finally {
+      setRefreshingPrice(false)
+    }
+  }
+
   const handleDelete = (id: string) => {
     const card = cards.find(c => c.id === id)
     if (card) setDeleteTarget(card)
@@ -308,11 +343,15 @@ export function AdminPage() {
   const handleView = async (card: Card) => {
     setDetailCard(card)
     setDetailScryfall(null)
+    setScryLoading(false)
     if (card.scryfall_id) {
+      setScryLoading(true)
       try {
         const sc = await fetchByScryfallId(card.scryfall_id)
         setDetailScryfall(sc)
-      } catch { /* ignore */ }
+      } catch { /* ignore */ } finally {
+        setScryLoading(false)
+      }
     } else if (card.image_url) {
       // ya tiene imagen, no necesita fetch extra
     }
@@ -332,6 +371,9 @@ export function AdminPage() {
           <div className="flex items-center gap-2">
             <Link to="/admin/dashboard" className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white">
               <LayoutDashboard size={16} /> Dashboard
+            </Link>
+            <Link to="/admin/ajustes" className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white">
+              <Settings size={16} /> Ajustes
             </Link>
             <Link to="/admin/scryfall" className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white">
               <Sparkles size={16} /> Docs Scryfall
@@ -475,6 +517,9 @@ export function AdminPage() {
           syncing={!!detailCard && syncingId === detailCard.id}
           onEdit={(c) => { setDetailCard(null); setEditing(c); setFormOpen(true) }}
           onToggleReviewed={handleToggleReviewed}
+          onRefreshPrice={handleRefreshPrice}
+          refreshingPrice={refreshingPrice}
+          scryLoading={scryLoading}
         />
         <VariantPicker card={variantPickerCard} open={!!variantPickerCard} onClose={() => setVariantPickerCard(null)} onSelect={handleVariantSelect} />
 
@@ -497,6 +542,7 @@ export function AdminPage() {
             </div>
           )}
         </Modal>
+        <BackToTop />
       </main>
     </div>
   )

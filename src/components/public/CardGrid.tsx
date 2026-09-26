@@ -1,4 +1,4 @@
-import { Check, Loader2, Minus, Pencil, RefreshCw } from 'lucide-react'
+import { Check, Loader2, Minus, Pencil, RefreshCw, Shield } from 'lucide-react'
 import { Badge } from '../ui/Badge'
 import { formatPrice } from '../../lib/utils'
 import type { Card } from '../../types/card'
@@ -37,6 +37,11 @@ export function CardGrid({ cards, onSelect, page = 0, showOwner = false, onSync,
           <div className="space-y-2 p-3">
             <div className="flex items-center gap-2">
               <h3 className="line-clamp-1 flex-1 font-semibold text-white">{card.name_en ?? card.name_es}</h3>
+              {card.is_reserved && (
+                <span title="Reserved List — nunca se reimprime" className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-amber-400">
+                  <Shield size={14} /> Reserved List
+                </span>
+              )}
               {onToggleReviewed && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onToggleReviewed(card) }}

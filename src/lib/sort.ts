@@ -66,9 +66,11 @@ export function compareCard(a: Card, b: Card, field: string): number {
 }
 
 export function applySort<T extends Card>(cards: T[], rules: SortRule[]): T[] {
-  if (rules.length === 0) return cards
+  // Red de seguridad: sin reglas, orden inicial por nombre A→Z en vez de
+  // devolver el orden crudo de la base (que no tiene ningún sentido visible).
+  const effective = rules.length > 0 ? rules : [{ field: 'name', dir: 'asc' } as SortRule]
   return [...cards].sort((a, b) => {
-    for (const r of rules) {
+    for (const r of effective) {
       const cmp = compareCard(a, b, r.field)
       if (cmp !== 0) return cmp * (r.dir === 'asc' ? 1 : -1)
     }

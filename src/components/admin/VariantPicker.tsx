@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Loader2 } from 'lucide-react'
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
 import type { ScryfallCard } from '../../types/scryfall'
@@ -16,13 +17,18 @@ interface Props {
 export function VariantPicker({ card, open, onClose, onSelect }: Props) {
   const [variants, setVariants] = useState<ScryfallCard[]>([])
   const [loading, setLoading] = useState(false)
+  const requestId = useRef(0)
 
   useEffect(() => {
     if (!open || !card) return
+    const id = ++requestId.current
     const fetchVariants = async () => {
+      // Vaciar lo anterior al instante: nunca mostrar variantes de otra carta
+      setVariants([])
       setLoading(true)
       try {
         const base = await searchScryfallExact(card.name_en || card.name_es, card.edition, card.language, card.goldfish_url)
+        if (requestId.current !== id) return // respuesta vieja: ignorar
         if (!base) {
           setVariants([])
           return
@@ -40,6 +46,7 @@ export function VariantPicker({ card, open, onClose, onSelect }: Props) {
           return
         }
         const r = await fetch(url, { headers: { Accept: 'application/json' } })
+        if (requestId.current !== id) return // respuesta vieja: ignorar
         if (!r.ok) {
           setVariants([base])
           return
@@ -49,11 +56,13 @@ export function VariantPicker({ card, open, onClose, onSelect }: Props) {
         // Sin fallback a otros sets (evita DKM/WC02/CST/PTC).
         const setFiltered = expectedSet ? data.data.filter(c => c.set.toLowerCase() === expectedSet.toLowerCase()) : data.data
         const toShow = [...setFiltered].sort((a, b) => a.collector_number.localeCompare(b.collector_number, undefined, { numeric: true }))
+        if (requestId.current !== id) return // respuesta vieja: ignorar
         setVariants(toShow.slice(0, 12))
       } catch {
+        if (requestId.current !== id) return
         setVariants([])
       } finally {
-        setLoading(false)
+        if (requestId.current === id) setLoading(false)
       }
     }
     fetchVariants()
@@ -80,9 +89,15 @@ export function VariantPicker({ card, open, onClose, onSelect }: Props) {
           )}{' '}
           indica la variante. Elige la correcta:
         </p>
-        {loading && <p className="text-sm text-zinc-500">Cargando variantes…</p>}
-        {!loading && variants.length === 0 && <p className="text-sm text-zinc-500">No se encontraron variantes.</p>}
-        <div className="grid gap-3 sm:grid-cols-2 max-h-[60vh] overflow-auto pr-1">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-12 text-sm text-zinc-400">
+            <Loader2 size={28} className="animate-spin text-amber-400" />
+            <p>Buscando variantes en Scryfall…</p>
+          </div>
+        ) : (
+          <>
+            {variants.length === 0 && <p className="text-sm text-zinc-500">No se encontraron variantes.</p>}
+            <div className="grid gap-3 sm:grid-cols-2 max-h-[60vh] overflow-auto pr-1">
           {variants.map(v => (
             <button
               key={v.id}
@@ -95,7 +110,9 @@ export function VariantPicker({ card, open, onClose, onSelect }: Props) {
               <div className="text-amber-400 truncate">{v.scryfall_uri}</div>
             </button>
           ))}
-        </div>
+            </div>
+          </>
+        )}
         <div className="flex justify-end">
           <Button variant="ghost" onClick={onClose}>Cancelar</Button>
         </div>
