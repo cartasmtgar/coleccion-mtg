@@ -27,6 +27,7 @@ create table if not exists public.cards (
   image_url text,
   goldfish_url text,
   reviewed boolean not null default false,
+  is_reserved boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -34,6 +35,29 @@ create table if not exists public.cards (
 -- Migración para instalaciones previas (idempotente)
 alter table public.cards add column if not exists goldfish_url text;
 alter table public.cards add column if not exists reviewed boolean not null default false;
+alter table public.cards add column if not exists is_reserved boolean not null default false;
+-- Backfill Reserved List (verificado contra Scryfall 2026-09-26, 69 nombres)
+update public.cards set is_reserved = true where name_en in (
+'Sustaining Spirit', 'Keeper of Tresserhorn', 'Gargantuan Gorilla', 'Kaysa',
+'Splintering Wind', 'Tornado', 'Wandering Mage', 'Ashnod''s Cylix',
+'Phyrexian Devourer', 'Lake of the Dead', 'Mesmeric Trance', 'Polar Kraken',
+'Reality Twist', 'Spoils of War', 'Balduvian Hydra', 'Soldevi Golem',
+'Rashida Scalebane', 'Yare', 'Energy Vortex', 'Hakim, Loreweaver',
+'Catacomb Dragon', 'Spirit of the Night', 'Tainted Specter',
+'Barreling Attack', 'Telim''Tor', 'Telim''Tor''s Edict', 'Zirilan of the Claw',
+'Afiya Grove', 'Cycle of Life', 'Lure of Prey', 'Seeds of Innocence',
+'Discordant Spirit', 'Purgatory', 'Rock Basilisk', 'Sawback Manticore',
+'Acidic Dagger', 'Mangara''s Tome', 'Paupers'' Cage', 'Phyrexian Dreadnought',
+'Razor Pendulum', 'Teeka''s Dragon', 'Ventifact Bottle', 'Chronatog',
+'Forbidden Ritual', 'Pillar Tombs of Aku', 'Lichenthrope', 'Pygmy Hippo',
+'Viashivan Dragon', 'Phyrexian Marauder', 'Triangle of War',
+'Psychic Vortex', 'Goblin Bomb', 'Maraxus of Keld', 'Aysen Highway',
+'Beast Walkers', 'Chain Stasis', 'Marjhan', 'Wall of Kelp', 'Black Carriage',
+'Grandmother Sengir', 'Koskun Falls', 'Anaba Ancestor',
+'Anaba Spirit Crafter', 'Dwarven Sea Clan', 'Faerie Noble',
+'Mammoth Harness', 'Apocalypse Chime', 'Goblin Flotilla',
+'Balm of Restoration'
+);
 alter table public.cards alter column condition drop not null;
 alter table public.cards alter column condition drop default;
 -- Nota: el check de rarity con 'basic' se aplica solo en creación; para tablas existentes recrear check si es necesario:
@@ -141,6 +165,40 @@ grant select on public.sync_meta to anon, authenticated;
 grant insert, update, delete on public.sync_meta to authenticated;
 -- La llave maestra del job programado necesita acceso total explícito
 grant all on public.sync_meta to service_role;
+
+-- ============================================================
+-- Tabla: settings (ajustes editables desde /admin/ajustes)
+-- ============================================================
+create table if not exists public.settings (
+  key text primary key,
+  value text not null default '',
+  updated_at timestamptz not null default now()
+);
+
+alter table public.settings enable row level security;
+
+-- Lectura pública (el modal de contacto los muestra sin login)
+drop policy if exists "Public can read settings" on public.settings;
+create policy "Public can read settings"
+  on public.settings for select
+  using (true);
+
+-- Escritura solo autenticada (panel admin)
+drop policy if exists "Authenticated can write settings" on public.settings;
+create policy "Authenticated can write settings"
+  on public.settings for all
+  using (auth.role() = 'authenticated')
+  with check (auth.role() = 'authenticated');
+
+grant select on public.settings to anon, authenticated;
+grant insert, update, delete on public.settings to authenticated;
+grant all on public.settings to service_role;
+
+-- Valores iniciales (no pisan los existentes)
+insert into public.settings (key, value) values
+  ('contact_phone', '+34 600 000 000'),
+  ('contact_email', 'coleccion@mtg.example.com')
+on conflict (key) do nothing;
 
 -- ============================================================
 -- Seed opcional (descomenta para pruebas)

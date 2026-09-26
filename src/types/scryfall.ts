@@ -1,6 +1,7 @@
 export interface ScryfallCard {
   id: string
   oracle_id: string
+  reserved: boolean
   name: string
   printed_name?: string
   lang: string

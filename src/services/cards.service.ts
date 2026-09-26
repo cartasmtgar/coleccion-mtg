@@ -22,6 +22,7 @@ const MOCK_CARDS: Card[] = [
     image_url: 'https://cards.scryfall.io/normal/front/a/3/a3fb8a3b-2f8c-4a1a-9b1a-1234567890aa.jpg',
     goldfish_url: null,
     reviewed: false,
+    is_reserved: false,
     created_at: new Date().toISOString(),
   },
   {
@@ -43,6 +44,7 @@ const MOCK_CARDS: Card[] = [
     image_url: 'https://cards.scryfall.io/normal/front/0/1/011e6a3e-0f8c-4a1e-9b1a-1234567890bb.jpg',
     goldfish_url: null,
     reviewed: false,
+    is_reserved: false,
     created_at: new Date().toISOString(),
   },
   {
@@ -64,6 +66,7 @@ const MOCK_CARDS: Card[] = [
     image_url: 'https://cards.scryfall.io/normal/front/b/d/bd8faae2-337d-4a55-8d3d-1234567890cc.jpg',
     goldfish_url: null,
     reviewed: false,
+    is_reserved: false,
     created_at: new Date().toISOString(),
   },
   {
@@ -85,6 +88,7 @@ const MOCK_CARDS: Card[] = [
     image_url: null,
     goldfish_url: null,
     reviewed: false,
+    is_reserved: false,
     created_at: new Date().toISOString(),
   },
 ]
@@ -147,7 +151,7 @@ export async function deleteCard(id: string): Promise<void> {
 
 export async function syncCardWithScryfall(
   card: Card,
-  scryfall: { id: string; uri: string; image: string | null; price: number | null },
+  scryfall: { id: string; uri: string; image: string | null; price: number | null; reserved?: boolean | null },
 ): Promise<Card> {
   // Si el arte cambió, la revisión manual previa queda invalidada
   const artChanged = card.scryfall_id != null && card.scryfall_id !== scryfall.id
@@ -157,6 +161,7 @@ export async function syncCardWithScryfall(
     image_url: scryfall.image ?? card.image_url,
     price_usd: scryfall.price ?? card.price_usd,
     reviewed: artChanged ? false : card.reviewed,
+    is_reserved: scryfall.reserved ?? card.is_reserved,
   })
 }
 

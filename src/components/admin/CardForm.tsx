@@ -31,6 +31,7 @@ export function CardForm({ open, onClose, onSave, initial }: Props) {
     image_url: initial?.image_url ?? '',
     goldfish_url: initial?.goldfish_url ?? '',
     reviewed: initial?.reviewed ?? false,
+    is_reserved: initial?.is_reserved ?? false,
   }))
 
   const key = initial?.id ?? 'new'
@@ -55,6 +56,7 @@ export function CardForm({ open, onClose, onSave, initial }: Props) {
         image_url: initial?.image_url ?? '',
         goldfish_url: initial?.goldfish_url ?? '',
         reviewed: initial?.reviewed ?? false,
+    is_reserved: initial?.is_reserved ?? false,
       })
     }
   }, [open, initial])

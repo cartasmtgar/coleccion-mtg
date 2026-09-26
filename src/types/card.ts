@@ -21,6 +21,7 @@ export interface Card {
   image_url: string | null
   goldfish_url: string | null
   reviewed: boolean
+  is_reserved: boolean
   created_at: string
   updated_at?: string
 }
