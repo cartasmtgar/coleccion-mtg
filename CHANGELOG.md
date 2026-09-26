@@ -41,10 +41,14 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Tabla del admin: icono marcar revisada en Acciones.
 - Picker de variantes: link Goldfish clickeable en nueva pestaña.
 - Picker de variantes: vacía la lista anterior al abrir, muestra spinner mientras carga y ignora respuestas viejas (evita sincronizar el arte equivocado por apuro).
+- Formulario de contacto funcional: guarda en `contact_messages` + avisa por mail (FormSubmit, sin cuentas); bandeja `/admin/mensajes` con contador de sin leer.
+- Contacto: "Carta(s) de interés" opcional, WhatsApp con mensaje predefinido y email con botón copiar (sin mailto).
 - Modal de carta: spinner "Cargando datos de Scryfall…" mientras llega la info (texto, legalidades, precios).
 - Reserved List: columna `is_reserved` (backfill de 69 nombres verificados + sync la setea desde Scryfall), filtro Reserved List? en catálogo/admin y marca sutil (escudo + texto) junto al título en grid, tabla y modal, sin tocar los pills.
 - Filtros con título visible (Edición, Rareza, Idioma, Color, Condición, Dueño, Revisada, Reservada) para saber qué es cada valor elegido.
 - Filtros y opciones en inglés (solo textos; los valores internos no cambian).
+- Formulario admin: Edición como desplegable con las 13 ediciones de la colección (sin typos).
+- Formulario admin: ediciones como "4ta (4ED)" y rareza en inglés; precio solo lectura (lo pone la sincronización).
 - Filtro Reserved? con signo de pregunta; opciones de edición con código Scryfall (`4ed`, `5ed`, …).
 - `reviewed boolean` en `cards` (migración idempotente en `schema.sql`): botón "Marcar revisada" en el modal del admin; elegir arte en el picker marca revisada (solo art-words Urza); el sync resetea la marca si cambia el arte y el formulario si cambia edición/goldfish.
 

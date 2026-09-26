@@ -3,7 +3,8 @@ import type { Card } from '../../types/card'
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
 import { Input, Label, Select, Textarea } from '../ui/Input'
-import { CONDITIONS, LANGUAGES } from '../../lib/constants'
+import { CONDITIONS, LANGUAGES, CARD_EDITIONS } from '../../lib/constants'
+import { editionToSetCode } from '../../lib/mtg-sets'
 
 type Props = {
   open: boolean
@@ -83,7 +84,17 @@ export function CardForm({ open, onClose, onSave, initial }: Props) {
           </div>
           <div>
             <Label>Edición</Label>
-            <Input value={form.edition ?? ''} onChange={(e) => setForm({ ...form, edition: e.target.value })} placeholder="Modern Masters" />
+            <Select value={form.edition ?? ''} onChange={(e) => setForm({ ...form, edition: e.target.value })}>
+              <option value="">Sin edición</option>
+              {(!CARD_EDITIONS.includes((form.edition ?? '') as (typeof CARD_EDITIONS)[number]) && form.edition) ? (
+                <option value={form.edition}>{form.edition} (actual)</option>
+              ) : null}
+              {CARD_EDITIONS.map((ed) => (
+                <option key={ed} value={ed}>
+                  {ed} ({(editionToSetCode(ed) ?? ed).toUpperCase()})
+                </option>
+              ))}
+            </Select>
           </div>
           <div>
             <Label>Tipo</Label>
@@ -92,13 +103,13 @@ export function CardForm({ open, onClose, onSave, initial }: Props) {
           <div>
             <Label>Rareza</Label>
             <Select value={form.rarity ?? ''} onChange={(e) => setForm({ ...form, rarity: e.target.value as Card['rarity'] })}>
-              <option value="common">Común</option>
-              <option value="uncommon">Infrecuente</option>
-              <option value="rare">Rara</option>
-              <option value="mythic">Mítica</option>
-              <option value="special">Especial</option>
+              <option value="common">Common</option>
+              <option value="uncommon">Uncommon</option>
+              <option value="rare">Rare</option>
+              <option value="mythic">Mythic</option>
+              <option value="special">Special</option>
               <option value="bonus">Bonus</option>
-              <option value="basic">Tierra Básica</option>
+              <option value="basic">Basic Land</option>
             </Select>
           </div>
           <div>
@@ -128,7 +139,16 @@ export function CardForm({ open, onClose, onSave, initial }: Props) {
           </div>
           <div>
             <Label>Precio USD</Label>
-            <Input type="number" step="0.01" value={form.price_usd ?? ''} onChange={(e) => setForm({ ...form, price_usd: e.target.value ? Number(e.target.value) : null })} placeholder="2.50" />
+            <Input
+              type="number"
+              step="0.01"
+              value={form.price_usd ?? ''}
+              placeholder="—"
+              disabled
+              title="El precio lo actualiza la sincronización"
+              className="cursor-not-allowed opacity-60"
+            />
+            <p className="mt-1 text-xs text-zinc-500">Lo actualiza la sincronización.</p>
           </div>
           <div className="sm:col-span-2">
             <Label>Dueño</Label>

@@ -211,7 +211,7 @@ export function CatalogPage() {
                   >
                     <GripVertical size={12} />
                   </span>
-                    <Select value={r.field} onChange={e => { const v = e.target.value as CatalogSortField; const copy = [...sortRules]; copy[idx] = { field: v, dir: r.dir }; setSortRules(copy) }} className="!w-20 shrink-0 py-1 text-xs border-0 bg-transparent p-0">
+                    <Select value={r.field} onChange={e => { const v = e.target.value as CatalogSortField; const copy = [...sortRules]; copy[idx] = { field: v, dir: r.dir }; setSortRules(copy) }} className="shrink-0 py-1 text-xs border-0 bg-transparent p-0" style={{ width: 120 }}>
                       <option value="name">Nombre</option>
                       <option value="edition">Edición</option>
                       <option value="rarity">Rareza</option>
@@ -229,7 +229,7 @@ export function CatalogPage() {
               ))}
                 {sortRules.length < 3 && (
                   <div className="flex items-center gap-1">
-                    <Select value="" onChange={e => { const v = e.target.value as CatalogSortField; if (v) handleAddRule(v) }} className="!w-24 shrink-0 py-1 text-xs">
+                    <Select value="" onChange={e => { const v = e.target.value as CatalogSortField; if (v) handleAddRule(v) }} className="shrink-0 py-1 text-xs" style={{ width: 120 }}>
                       <option value="">+ Añadir</option>
                       <option value="name">Nombre</option>
                       <option value="edition">Edición</option>
