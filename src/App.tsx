@@ -6,6 +6,7 @@ import { LoginPage } from './pages/LoginPage'
 import { AdminPage } from './pages/AdminPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { SettingsPage } from './pages/SettingsPage'
+import { MessagesPage } from './pages/MessagesPage'
 import { ScryfallDocsPage } from './pages/ScryfallDocsPage'
 
 export default function App() {
@@ -36,6 +37,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <SettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/mensajes"
+            element={
+              <ProtectedRoute>
+                <MessagesPage />
               </ProtectedRoute>
             }
           />

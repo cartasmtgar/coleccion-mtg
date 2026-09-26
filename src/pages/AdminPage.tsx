@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { LogOut, Plus, RefreshCw, Loader2, Sparkles, ExternalLink, LayoutDashboard, AlertTriangle, ArrowUp, ArrowDown, GripVertical, X, Settings } from 'lucide-react'
+import { LogOut, Plus, RefreshCw, Loader2, Sparkles, ExternalLink, LayoutDashboard, AlertTriangle, ArrowUp, ArrowDown, GripVertical, X, Settings, Mail } from 'lucide-react'
 import { ManaBlack } from '../components/ui/ManaLogo'
 import { Button } from '../components/ui/Button'
 import { PricesSyncChip } from '../components/ui/PricesSyncChip'
@@ -24,12 +24,18 @@ import { editionToSetCode, getCanonicalEnglishName, normalizeForCompare, parseGo
 import { applySort, removeRule, toggleDir, type SortRule } from '../lib/sort'
 import { markPriceRefreshed, priceRefreshWaitMin } from '../lib/utils'
 import * as cardsService from '../services/cards.service'
+import { getUnreadMessagesCount } from '../services/messages.service'
 
 export function AdminPage() {
   const { cards, refresh } = useCards()
   const { signOut, user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const syncFilter = searchParams.get('sync') as 'synced' | 'pending' | 'review' | null
+  const [unreadMessages, setUnreadMessages] = useState(0)
+
+  useEffect(() => {
+    getUnreadMessagesCount().then(setUnreadMessages).catch(() => null)
+  }, [])
   const [catalogView, setCatalogView] = useState<CatalogView>(() => {
     try {
       const v = localStorage.getItem('admin:view') as CatalogView | null
@@ -375,6 +381,14 @@ export function AdminPage() {
             <Link to="/admin/ajustes" className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white">
               <Settings size={16} /> Ajustes
             </Link>
+            <Link to="/admin/mensajes" className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white">
+              <Mail size={16} /> Mensajes
+              {unreadMessages > 0 && (
+                <span className="rounded-full bg-amber-500 px-1.5 py-0.5 text-xs font-bold leading-none text-zinc-900">
+                  {unreadMessages}
+                </span>
+              )}
+            </Link>
             <Link to="/admin/scryfall" className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white">
               <Sparkles size={16} /> Docs Scryfall
             </Link>
@@ -470,7 +484,7 @@ export function AdminPage() {
               <span className={`flex h-6 w-5 items-center justify-center rounded-md ${sortRules.length > 1 ? 'cursor-grab active:cursor-grabbing text-zinc-500 hover:text-zinc-300' : 'cursor-not-allowed text-zinc-600 opacity-40'}`} title={sortRules.length > 1 ? 'Arrastrar para reordenar' : 'Añade otro orden para reordenar'}>
                 <GripVertical size={12} />
               </span>
-              <Select value={r.field} onChange={e => { const v = e.target.value as import('../components/admin/AdminTable').AdminSortField; const copy = [...sortRules]; copy[idx] = { field: v, dir: r.dir }; setSortRules(copy) }} className="!w-20 shrink-0 py-1 text-xs border-0 bg-transparent p-0">
+              <Select value={r.field} onChange={e => { const v = e.target.value as import('../components/admin/AdminTable').AdminSortField; const copy = [...sortRules]; copy[idx] = { field: v, dir: r.dir }; setSortRules(copy) }} className="shrink-0 py-1 text-xs border-0 bg-transparent p-0" style={{ width: 120 }}>
                   <option value="name">Nombre</option>
                   <option value="edition">Edición</option>
                   <option value="owner">Dueño</option>
@@ -486,7 +500,7 @@ export function AdminPage() {
             </div>
           ))}
             {sortRules.length < 3 && (
-              <Select value="" onChange={e => { const v = e.target.value as import('../components/admin/AdminTable').AdminSortField; if (v && !sortRules.find(x => x.field === v)) setSortRules([...sortRules, { field: v, dir: 'asc' }]) }} className="!w-24 shrink-0 py-1 text-xs">
+              <Select value="" onChange={e => { const v = e.target.value as import('../components/admin/AdminTable').AdminSortField; if (v && !sortRules.find(x => x.field === v)) setSortRules([...sortRules, { field: v, dir: 'asc' }]) }} className="shrink-0 py-1 text-xs" style={{ width: 120 }}>
                 <option value="">+ Añadir</option>
                 <option value="name">Nombre</option>
                 <option value="edition">Edición</option>

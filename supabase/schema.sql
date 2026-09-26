@@ -201,6 +201,48 @@ insert into public.settings (key, value) values
 on conflict (key) do nothing;
 
 -- ============================================================
+-- Tabla: contact_messages (bandeja del formulario de contacto)
+-- ============================================================
+create table if not exists public.contact_messages (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  email text not null,
+  cards text not null default '',
+  message text not null default '',
+  read boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+alter table public.contact_messages enable row level security;
+
+-- Cualquiera puede dejar un mensaje (formulario público)
+drop policy if exists "Public can insert contact_messages" on public.contact_messages;
+create policy "Public can insert contact_messages"
+  on public.contact_messages for insert
+  with check (true);
+
+-- Solo admin lee/marca/borra
+drop policy if exists "Authenticated can read contact_messages" on public.contact_messages;
+create policy "Authenticated can read contact_messages"
+  on public.contact_messages for select
+  using (auth.role() = 'authenticated');
+
+drop policy if exists "Authenticated can update contact_messages" on public.contact_messages;
+create policy "Authenticated can update contact_messages"
+  on public.contact_messages for update
+  using (auth.role() = 'authenticated')
+  with check (auth.role() = 'authenticated');
+
+drop policy if exists "Authenticated can delete contact_messages" on public.contact_messages;
+create policy "Authenticated can delete contact_messages"
+  on public.contact_messages for delete
+  using (auth.role() = 'authenticated');
+
+grant insert on public.contact_messages to anon, authenticated;
+grant select, update, delete on public.contact_messages to authenticated;
+grant all on public.contact_messages to service_role;
+
+-- ============================================================
 -- Seed opcional (descomenta para pruebas)
 -- ============================================================
 -- insert into public.cards (name_es, name_en, type, edition, rarity, year, language, condition, owner, quantity, price_usd, scryfall_id, image_url)
