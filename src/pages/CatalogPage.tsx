@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Mail, X, ArrowUp, ArrowDown, GripVertical } from 'lucide-react'
+import { Mail, X, ArrowUp, ArrowDown, GripVertical, Download } from 'lucide-react'
 import { ManaBlack } from '../components/ui/ManaLogo'
 import { Button } from '../components/ui/Button'
 import { PricesSyncChip } from '../components/ui/PricesSyncChip'
@@ -18,6 +18,7 @@ import type { ScryfallCard } from '../types/scryfall'
 import { fetchByScryfallId } from '../services/scryfall'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { applySort, removeRule, toggleDir, type SortRule } from '../lib/sort'
+import { groupCatalogCards, downloadCatalogXlsx } from '../lib/export-xlsx'
 
 export function CatalogPage() {
   const { cards, loading, error } = useCards()
@@ -72,20 +73,8 @@ export function CatalogPage() {
   }, [cards, filters])
 
   // Agrupar por goldfish_url para mostrar total + desglose por idioma (B)
-  // Agrupar por goldfish_url para mostrar total + desglose por idioma (B)
   const grouped = useMemo(() => {
-    const map = new Map<string, { rep: Card; total: number; langs: Record<string, number> }>()
-    for (const c of filtered) {
-      const key = c.goldfish_url ? c.goldfish_url : `${c.name_es}||${c.name_en}||${c.edition}||${c.type}`
-      const entry = map.get(key)
-      if (entry) {
-        entry.total += c.quantity
-        entry.langs[c.language] = (entry.langs[c.language] ?? 0) + c.quantity
-      } else {
-        map.set(key, { rep: c, total: c.quantity, langs: { [c.language]: c.quantity } })
-      }
-    }
-    return [...map.values()].map(v => ({ ...v.rep, quantity: v.total, _total: v.total, _langs: v.langs } as Card & { _total: number; _langs: Record<string, number> }))
+    return groupCatalogCards(filtered).map(v => ({ ...v.rep, quantity: v.total, _total: v.total, _langs: v.langs } as Card & { _total: number; _langs: Record<string, number> }))
   }, [filtered])
 
   const sorted = useMemo(() => applySort(grouped as unknown as import('../types/card').Card[], sortRules as SortRule[]) as typeof grouped, [grouped, sortRules])
@@ -171,9 +160,14 @@ export function CatalogPage() {
                 <p className="text-sm text-zinc-500">{grouped.length} cartas únicas · {filtered.reduce((a,c)=>a+c.quantity,0)} unidades totales</p>
                 <PricesSyncChip />
               </div>
-              <Button variant="outline" size="sm" onClick={() => setContactOpen(true)}>
-                <Mail size={14} /> Cotizar cartas
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={() => downloadCatalogXlsx(cards)}>
+                  <Download size={14} /> Excel
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setContactOpen(true)}>
+                  <Mail size={14} /> Cotizar cartas
+                </Button>
+              </div>
             </div>
 
             <SearchFilters

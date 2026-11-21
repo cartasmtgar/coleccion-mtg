@@ -1,6 +1,9 @@
 # Roadmap — Colección MTG Web + Admin
 
-> **Fuente única de verdad para tareas pendientes, ideas y pospuestos.** Este archivo debe mantenerse actualizado en todo momento (ver `AGENTS.md:56`). Última actualización: 2026-09-25
+> **Fuente única de verdad para tareas pendientes, ideas y pospuestos.** Este archivo debe mantenerse actualizado en todo momento (ver `AGENTS.md:56`). Última actualización: 2026-09-29
+
+## Unreleased
+- [x] **Descarga Excel:** botón en catálogo que exporta todo agrupado como .xlsx (`src/lib/export-xlsx.ts`, librería `xlsx` ya existente).
 
 ## Estado actual — v0.4.0 (2026-09-25) — Sync programada de precios
 - [x] **Script + workflow:** `scripts/sync-prices.mjs` (1366 versiones en 19 tandas bulk, solo diffs, `--dry-run` verificado OK) + `.github/workflows/sync-prices.yml` (cron cada 12h + manual). Llave maestra solo en Secrets.

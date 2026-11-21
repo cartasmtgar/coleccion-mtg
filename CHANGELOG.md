@@ -8,6 +8,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 ### Added
+- Keepalive del sync: el workflow de precios commitea `.github/keepalive.txt` una vez al mes para que GitHub no lo desactive a los 60 días sin commits (las corridas del workflow no cuentan como actividad).
 - Sync programada de precios cada 12h: `scripts/sync-prices.mjs` (bulk Scryfall 75, escribe solo cambios, `--dry-run`) + `.github/workflows/sync-prices.yml` (cron + botón manual). Usa `SUPABASE_SERVICE_ROLE_KEY` solo en GitHub Secrets, nunca en el repo.
 - Tabla `sync_meta` + chip "Precios actualizados el …" en catálogo y admin (`getPricesSyncDate`, tolera tabla inexistente).
 - `ROADMAP.md` como fuente única de tareas pendientes/ideas/pospuestas con regla de actualización continua.
@@ -47,6 +48,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Reserved List: columna `is_reserved` (backfill de 69 nombres verificados + sync la setea desde Scryfall), filtro Reserved List? en catálogo/admin y marca sutil (escudo + texto) junto al título en grid, tabla y modal, sin tocar los pills.
 - Filtros con título visible (Edición, Rareza, Idioma, Color, Condición, Dueño, Revisada, Reservada) para saber qué es cada valor elegido.
 - Filtros y opciones en inglés (solo textos; los valores internos no cambian).
+- Catálogo: botón Excel que descarga todo el catálogo agrupado como .xlsx real (Nombre ES/EN, Edición, Rareza, Tipo, Idiomas, Cantidad, Precio unit./total USD; con anchos y autofiltros).
 - Formulario admin: Edición como desplegable con las 13 ediciones de la colección (sin typos).
 - Formulario admin: ediciones como "4ta (4ED)" y rareza en inglés; precio solo lectura (lo pone la sincronización).
 - Filtro Reserved? con signo de pregunta; opciones de edición con código Scryfall (`4ed`, `5ed`, …).
