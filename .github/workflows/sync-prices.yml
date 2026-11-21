@@ -3,6 +3,10 @@ name: Sync precios Scryfall
 # Sincroniza SOLO precios cada 12 horas (00:00 y 12:00 UTC).
 # Escribe únicamente las filas cuyo precio cambió + la fecha en sync_meta.
 # La service_role key vive SOLO en GitHub Secrets, nunca en el repo.
+#
+# Keepalive: GitHub desactiva los workflows programados tras 60 días SIN
+# commits. Las corridas no cuentan como actividad, así que este job hace un
+# commit mínimo (.github/keepalive.txt) una vez al mes para que nunca se apague.
 
 on:
   schedule:
@@ -10,7 +14,7 @@ on:
   workflow_dispatch: # botón "Run workflow" para forzar una corrida manual
 
 permissions:
-  contents: read
+  contents: write # necesario para el commit mensual de keepalive
 
 concurrency:
   group: sync-prices
@@ -32,3 +36,21 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+      # Mantiene el repo "activo" para que GitHub no apague el cron a los 60 días.
+      - name: Keepalive (1 commit por mes)
+        if: github.event_name == 'schedule'
+        run: |
+          last=$(git log -1 --format=%ct -- .github/keepalive.txt 2>/dev/null || echo 0)
+          last=${last:-0}
+          now=$(date +%s)
+          if [ $((now - last)) -lt 2592000 ]; then
+            echo "Hubo commit en los últimos 30 días. No hace falta nada."
+            exit 0
+          fi
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .github/keepalive.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/keepalive.txt
+          git commit -m "chore: keepalive del sync de precios"
+          git push
